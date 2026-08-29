@@ -225,7 +225,7 @@
         </div>
     </div>
 
-    <!-- Add New Service Modal -->
+    <!-- Add New Service Modal (With AI Engine) -->
     <div id="addServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
         <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
@@ -242,10 +242,17 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (Bengali)</label>
                     <input type="text" id="newSrvBn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">FontAwesome Icon Class</label>
-                    <input type="text" id="newSrvIcon" placeholder="e.g., fa-file-pdf" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                
+                <!-- AI Icon Selector Block -->
+                <div class="bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 p-3 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-bold text-blue-800 dark:text-blue-400"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Icon Selection</label>
+                        <i id="aiIconPreview" class="fa-solid fa-file text-blue-500 text-xl transition-all duration-300"></i>
+                    </div>
+                    <input type="text" id="newSrvIcon" placeholder="e.g., fa-file-pdf" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500">
+                    <p class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">Start typing a service name to auto-detect icon.</p>
                 </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Is this a Travel Service?</label>
                     <select id="newSrvTravel" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
@@ -423,7 +430,7 @@
             const ov = m.querySelector('.modal-overlay');
             const ct = m.querySelector('.modal-content');
             m.classList.remove('hidden'); m.classList.add('flex');
-            void m.offsetWidth; // Force Reflow
+            void m.offsetWidth; 
             if(ov) ov.classList.replace('opacity-0', 'opacity-100');
             if(ct) {
                 ct.classList.replace('opacity-0', 'opacity-100');
@@ -466,7 +473,7 @@
 
             if(view === 'admin') { 
                 fadeOut(cApp); fadeIn(aApp); 
-                cleanupOldOrders(); // Silent background cleanup
+                cleanupOldOrders(); 
                 loadOrders(); 
             } else { 
                 isAdminLoggedIn = false; fadeOut(aApp); fadeIn(cApp); 
@@ -506,6 +513,25 @@
             { id: 'def3', en: 'Train Ticket', bn: 'ট্রেন টিকিট', icon: 'fa-train', isTravel: true },
             { id: 'def4', en: 'Plane Ticket', bn: 'বিমান টিকিট', icon: 'fa-plane', isTravel: true }
         ];
+
+        // --- SMART AI ICON DICTIONARY ---
+        const iconDict = {
+            'fire-burner': ['lpg', 'gas', 'cylinder', 'fuel', 'indane', 'hp'],
+            'passport': ['passport', 'visa', 'travel', 'পাসপোর্ট'],
+            'address-card': ['aadhaar', 'aadhar', 'address', 'uidai', 'আধার'],
+            'file-invoice': ['ration', 'pds', 'food', 'রেশন'],
+            'id-card': ['voter', 'epic', 'election', 'ভোটার'],
+            'train': ['train', 'railway', 'irctc', 'ট্রেন'],
+            'plane': ['plane', 'flight', 'air', 'বিমান'],
+            'notes-medical': ['ayushman', 'health', 'medical', 'hospital', 'doctor', 'আয়ুষ্মান'],
+            'download': ['download', 'save', 'get', 'ডাউনলোড'],
+            'print': ['xerox', 'print', 'photocopy', 'জেরক্স'],
+            'copy': ['copy', 'duplicate', 'ফটোকপি'],
+            'graduation-cap': ['school', 'college', 'student', 'education', 'admission', 'ছাত্র'],
+            'file-invoice-dollar': ['tax', 'pan', 'income', 'প্যান'],
+            'bolt': ['electricity', 'power', 'বিদ্যুৎ'],
+            'building-columns': ['bank', 'account', 'finance', 'ব্যাংক']
+        };
 
         let currentLang = 'en';
         let currentRefNo = '';
@@ -905,13 +931,40 @@
 
         function logoutAdmin() { isAdminLoggedIn = false; switchView('customer'); }
 
+        // --- SMART AI ICON ALGORITHM ---
+        function detectAIIcon() {
+            const text = (document.getElementById('newSrvEn').value + " " + document.getElementById('newSrvBn').value).toLowerCase();
+            const preview = document.getElementById('aiIconPreview');
+            const inputField = document.getElementById('newSrvIcon');
+            
+            let matchedIcon = 'fa-file'; 
+            
+            for (const [icon, keywords] of Object.entries(iconDict)) {
+                if (keywords.some(kw => text.includes(kw))) {
+                    matchedIcon = `fa-${icon}`;
+                    break;
+                }
+            }
+            
+            inputField.value = matchedIcon;
+            preview.className = `fa-solid ${matchedIcon} text-blue-500 text-xl transition-all duration-300 transform scale-110`;
+            setTimeout(() => { preview.classList.remove('scale-110'); }, 300);
+        }
+
         function openAddServiceModal() {
             if(!isAdminLoggedIn) { alert("Access Denied: Supervisor authentication required."); return; }
+            
+            // Attach AI listeners
+            document.getElementById('newSrvEn').addEventListener('input', detectAIIcon);
+            document.getElementById('newSrvBn').addEventListener('input', detectAIIcon);
+            document.getElementById('newSrvIcon').addEventListener('input', function(e) {
+                document.getElementById('aiIconPreview').className = `fa-solid ${e.target.value} text-blue-500 text-xl transition-all duration-300`;
+            });
+            
             showModalAnim('addServiceModal');
         }
         function closeAddServiceModal() { hideModalAnim('addServiceModal'); }
 
-        /* Delete Service Functionality */
         function populateDeleteDropdown() {
             const select = document.getElementById('deleteSrvSelect');
             select.innerHTML = '<option value="">-- Select a Service --</option>';
