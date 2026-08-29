@@ -102,7 +102,6 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden" id="servicesGrid"></div>
         </main>
         
-        <!-- Floating Multiple Service Cart Button -->
         <div id="floatingCart" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-500 z-30 pointer-events-none">
             <button onclick="openCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-[0_10px_40px_rgba(16,185,129,0.5)] flex items-center gap-3 text-lg pointer-events-auto transition-transform hover:scale-105">
                 <i class="fa-solid fa-basket-shopping text-xl"></i>
@@ -189,6 +188,25 @@
                 <button onclick="hideModalAnim('adminSearchModal')" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 flex-1" id="adminSearchResultsBody"></div>
+        </div>
+    </div>
+
+    <!-- Reject Reason Modal -->
+    <div id="rejectReasonModal" class="fixed inset-0 hidden items-center justify-center z-[80] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-red-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Reject Order</h3>
+                <button onclick="closeRejectModal()" class="text-red-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-300">Please provide a reason for rejecting this order. The customer will see this message.</p>
+                <input type="hidden" id="rejectDocId">
+                <textarea id="rejectReasonInput" rows="3" placeholder="Enter reason for rejection..." class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-red-500 resize-none"></textarea>
+                <button onclick="submitRejectOrder()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Confirm Rejection
+                </button>
+            </div>
         </div>
     </div>
 
@@ -427,11 +445,8 @@
             }
             setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
             
-            // Check if any other modals are still open before removing body classes
             const otherModalsOpen = document.querySelectorAll('.fixed.flex:not(.hidden)').length > 1;
-            if (!otherModalsOpen) {
-                document.body.classList.remove('modal-open', 'overflow-hidden');
-            }
+            if (!otherModalsOpen) { document.body.classList.remove('modal-open', 'overflow-hidden'); }
         }
 
         function switchView(view) {
@@ -439,21 +454,23 @@
             const aApp = document.getElementById('adminApp');
             
             const fadeOut = (el) => {
-                el.classList.replace('opacity-100', 'opacity-0');
-                el.classList.replace('translate-y-0', 'translate-y-4');
+                el.classList.replace('opacity-100', 'opacity-0'); el.classList.replace('translate-y-0', 'translate-y-4');
                 setTimeout(() => { el.classList.add('hidden'); el.classList.remove('block'); }, 300);
             };
             const fadeIn = (el) => {
                 setTimeout(() => {
-                    el.classList.remove('hidden'); el.classList.add('block');
-                    void el.offsetWidth;
-                    el.classList.replace('opacity-0', 'opacity-100');
-                    el.classList.replace('translate-y-4', 'translate-y-0');
+                    el.classList.remove('hidden'); el.classList.add('block'); void el.offsetWidth;
+                    el.classList.replace('opacity-0', 'opacity-100'); el.classList.replace('translate-y-4', 'translate-y-0');
                 }, 300);
             };
 
-            if(view === 'admin') { fadeOut(cApp); fadeIn(aApp); loadOrders(); } 
-            else { isAdminLoggedIn = false; fadeOut(aApp); fadeIn(cApp); }
+            if(view === 'admin') { 
+                fadeOut(cApp); fadeIn(aApp); 
+                cleanupOldOrders(); // Silent background cleanup
+                loadOrders(); 
+            } else { 
+                isAdminLoggedIn = false; fadeOut(aApp); fadeIn(cApp); 
+            }
         }
 
         /* ==========================================
@@ -481,8 +498,7 @@
         let services = [];
         window.orderImages = {}; 
         window.globalOrdersList = []; 
-        
-        let selectedServices = []; // Holds the user's multi-select choices
+        let selectedServices = []; 
 
         const defaultServices = [
             { id: 'def1', en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
@@ -586,7 +602,6 @@
                 const hasTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
                 if(hasTravel) renderPaxBlocks(true);
                 
-                // Update specific text rendering
                 const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('<br> • ');
                 document.getElementById('displayService').innerHTML = '• ' + srvNames;
             }
@@ -727,7 +742,6 @@
 
             if(db) { 
                 try { 
-                    // Robust Duplicate Checking for Multiple Services
                     const snapshot = await db.collection('orders').where('customerMobile', '==', formData.mobile).get();
                     let isDuplicate = false;
                     
@@ -755,7 +769,7 @@
                     const orderData = {
                         refId: currentRefNo, 
                         serviceNameEn: selectedServices.map(s => s.en).join(' + '),
-                        serviceNames: selectedServices.map(s => s.en), // Array structure for easier searching/checking
+                        serviceNames: selectedServices.map(s => s.en), 
                         customerName: formData.name, 
                         customerMobile: formData.mobile,
                         screenshotBase64: base64Str, 
@@ -803,7 +817,6 @@
             doc.setFont("helvetica", "bold"); doc.text(`Customer:`, 30, 110); doc.setFont("helvetica", "normal"); doc.text(`${data.name}`, 75, 110);
             doc.setFont("helvetica", "bold"); doc.text(`Services:`, 30, 125); 
             
-            // Multiline for long service combinations
             doc.setFont("helvetica", "normal"); 
             const splitSrv = doc.splitTextToSize(sNameStr, 110);
             doc.text(splitSrv, 75, 125);
@@ -852,6 +865,11 @@
                         if(d.status === 'Completed') statusUI = '<span class="text-emerald-600 bg-emerald-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-circle-check"></i> Completed</span>';
                         if(d.status === 'Rejected') statusUI = '<span class="text-red-600 bg-red-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>';
                         
+                        let reasonHtml = '';
+                        if(d.status === 'Rejected' && d.rejectReason) {
+                            reasonHtml = `<div class="mt-3 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400"><strong>Reason:</strong> ${d.rejectReason}</div>`;
+                        }
+
                         foundHTML += `
                             <div class="border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-3 rounded-lg mb-3">
                                 <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${d.serviceNameEn}</p>
@@ -859,6 +877,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">Ref: ${d.refId}</p>
                                     ${statusUI}
                                 </div>
+                                ${reasonHtml}
                             </div>
                         `;
                     }
@@ -941,6 +960,43 @@
             try { await db.collection('orders').doc(docId).update({ status: newStatus }); } catch(e) { console.error(e); alert("Failed to update status."); }
         }
 
+        /* Auto-Expire Orders Background Routine */
+        async function cleanupOldOrders() {
+            if(!db || !isAdminLoggedIn) return;
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            try {
+                const snapshot = await db.collection('orders').where('timestamp', '<', thirtyDaysAgo).get();
+                if(!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => { batch.delete(doc.ref); });
+                    await batch.commit();
+                }
+            } catch(e) { console.error("Auto-cleanup error:", e); }
+        }
+
+        /* Rejection Reason Workflow */
+        function openRejectModal(docId) {
+            document.getElementById('rejectDocId').value = docId;
+            document.getElementById('rejectReasonInput').value = '';
+            showModalAnim('rejectReasonModal');
+        }
+
+        function closeRejectModal() { hideModalAnim('rejectReasonModal'); }
+
+        async function submitRejectOrder() {
+            const docId = document.getElementById('rejectDocId').value;
+            const reason = document.getElementById('rejectReasonInput').value.trim();
+            if(!reason) { alert("Please enter a reason for rejection."); return; }
+            if(!db || !isAdminLoggedIn) return;
+            
+            try {
+                await db.collection('orders').doc(docId).update({ status: 'Rejected', rejectReason: reason });
+                closeRejectModal();
+            } catch(e) { console.error(e); alert("Failed to reject order."); }
+        }
+
         function getActionUIParams(d, docId) {
             const waMsg = encodeURIComponent("Order Confirmed! Please come to our shop for your service!");
             const waURL = `https://wa.me/91${d.customerMobile}?text=${waMsg}`;
@@ -958,12 +1014,17 @@
                         <a href="${waURL}" target="_blank" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-brands fa-whatsapp"></i> Chat</a>
                         <div class="flex gap-2 w-full">
                             <button onclick="updateOrderStatus('${docId}', 'Approved')" class="w-1/2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1.5 rounded-lg text-xs font-bold transition">Approve</button>
-                            <button onclick="updateOrderStatus('${docId}', 'Rejected')" class="w-1/2 bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1.5 rounded-lg text-xs font-bold transition">Reject</button>
+                            <button onclick="openRejectModal('${docId}')" class="w-1/2 bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1.5 rounded-lg text-xs font-bold transition">Reject</button>
                         </div>
                     </div>
                 `;
             } else if (d.status === 'Approved') {
-                actionUI = `<button onclick="updateOrderStatus('${docId}', 'Completed')" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-check"></i> Complete Order</button>`;
+                actionUI = `
+                    <div class="flex flex-col gap-2 w-full">
+                        <button onclick="updateOrderStatus('${docId}', 'Completed')" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-check"></i> Complete Order</button>
+                        <button onclick="openRejectModal('${docId}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition border border-red-200">Reject</button>
+                    </div>
+                `;
             } else { actionUI = `<span class="text-gray-400 text-xs italic block text-center">Closed</span>`; }
 
             return { statusUI, actionUI };
