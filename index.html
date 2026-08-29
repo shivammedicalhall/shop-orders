@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Gigs | Service Booking</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* ==================== TRUCK ANIMATION ==================== */
+        .order-btn-truck {
+            --background: #0f172a; --street: #1e293b; --street-line: #64748b;
+            position: relative; border: none; background: var(--background);
+            outline: none; padding: 16px 0; border-radius: 9999px; width: 100%;
+            height: 60px; text-align: center; overflow: hidden; cursor: pointer;
+            transition: background 0.4s ease, transform 0.2s ease;
+        }
+        .order-btn-truck:disabled { background: #94a3b8; cursor: not-allowed; }
+        .dark .order-btn-truck:disabled { background: #475569; }
+        .order-btn-truck .default-text { display: flex; align-items: center; justify-content: center; gap: 8px; color: #ffffff; font-weight: 700; font-size: 17px; transition: opacity 0.3s ease, transform 0.3s ease; }
+        .order-btn-truck .success-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.7); opacity: 0; color: #ffffff; font-weight: 600; font-size: 19px; display: flex; align-items: center; gap: 8px; transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); visibility: hidden; }
+        .order-btn-truck .road-lines { opacity: 0; position: absolute; left: -50%; top: 50%; width: 200%; height: 2px; background: repeating-linear-gradient(90deg, var(--street-line) 0, var(--street-line) 10px, transparent 10px, transparent 20px); transform: translateY(-50%); transition: opacity 0.3s ease; }
+        .order-btn-truck .box-drop { position: absolute; left: 42%; top: 10px; width: 16px; height: 16px; background: #d97706; border-radius: 2px; opacity: 0; z-index: 5; }
+        .order-btn-truck .truck-wrapper { position: absolute; top: 50%; left: -80px; transform: translateY(-50%); display: flex; align-items: center; opacity: 0; z-index: 10; }
+        .order-btn-truck.animating { background: var(--street); pointer-events: none; }
+        .order-btn-truck.animating .default-text { opacity: 0; transform: translateY(-25px); }
+        .order-btn-truck.animating .road-lines { opacity: 0.8; animation: moveRoad 0.4s linear infinite; }
+        .order-btn-truck.animating .truck-wrapper { opacity: 1; animation: driveTruckSequence 3.2s ease-in-out forwards; }
+        .order-btn-truck.animating .truck-wrapper .wheel { animation: spinWheel 0.4s linear infinite; }
+        .order-btn-truck.animating .box-drop { animation: boxDropSequence 3.2s ease-in-out forwards; }
+        .order-btn-truck.done { background: var(--background); }
+        .order-btn-truck.done .road-lines, .order-btn-truck.done .truck-wrapper, .order-btn-truck.done .box-drop { display: none; }
+        .order-btn-truck.done .default-text { display: none; }
+        .order-btn-truck.done .success-text { visibility: visible; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        @keyframes moveRoad { 0% { transform: translateY(-50%) translateX(0); } 100% { transform: translateY(-50%) translateX(-20px); } }
+        @keyframes spinWheel { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes driveTruckSequence { 0% { left: -80px; } 35% { left: 38%; } 55% { left: 38%; } 100% { left: 110%; } }
+        @keyframes boxDropSequence { 0% { opacity: 0; transform: translateY(-30px) scale(0.5); } 35% { opacity: 1; transform: translateY(-30px) scale(0.9); } 48% { opacity: 1; transform: translateY(12px) scale(1); } 55% { opacity: 1; transform: translateY(12px) scale(1); } 100% { opacity: 0; transform: translateY(12px) translateX(250px); } }
+        
+        .final-check-animated { animation: popCheck 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popCheck { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-gray-200 font-sans antialiased transition-colors duration-300 flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 dark:bg-slate-950 text-white shadow-lg sticky top-0 z-50 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-laptop-code text-2xl text-blue-400"></i>
+                    <span class="font-bold text-xl tracking-wide cursor-pointer transition-transform" onclick="if(!isAdminLoggedIn) switchView('customer')">Cyber Gigs</span>
+                </div>
+                <div class="flex gap-2 sm:gap-3">
+                    <button onclick="openTrackModal()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2 transition-transform" id="btnNavTrack">
+                        <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Track</span>
+                    </button>
+                    <button onclick="openAdminLogin()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center transition-transform">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                    </button>
+                    <button onclick="toggleTheme()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center w-12 transition-transform">
+                        <i id="themeIcon" class="fa-solid fa-moon text-yellow-300"></i>
+                    </button>
+                    <button id="langToggle" onclick="toggleLanguage()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium shadow transition-transform">
+                        EN / বাংলা
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==================== CUSTOMER PORTAL ==================== -->
+    <div id="customerApp" class="w-full transition-all duration-300 opacity-100 translate-y-0 block">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+            <div class="text-center mb-12">
+                <h1 id="pageTitle" class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl transition-colors">Select a Service to Order</h1>
+                <p id="pageSub" class="mt-3 text-lg text-gray-500 dark:text-gray-400 transition-colors">Fast, reliable, and professional digital services.</p>
+            </div>
+            <div id="loadingServices" class="flex justify-center items-center py-10">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600"></i>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden" id="servicesGrid"></div>
+        </main>
+    </div>
+
+    <!-- ==================== SUPERVISOR PORTAL ==================== -->
+    <div id="adminApp" class="w-full transition-all duration-300 opacity-0 translate-y-4 hidden">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">Supervisor Dashboard</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Manage incoming orders and update service catalog.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform">
+                        <i class="fa-solid fa-folder-plus"></i> Add Service
+                    </button>
+                    <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-5 py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Data Table & Search -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700">
+                
+                <!-- Header & Search Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Recent Orders</h2>
+                    
+                    <div class="flex w-full sm:w-auto gap-2">
+                        <input type="text" id="adminSearchInput" placeholder="Search Customer Name..." class="w-full sm:w-64 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500 transition-colors">
+                        <button onclick="performAdminSearch()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-transform">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 uppercase text-xs font-semibold">
+                            <tr>
+                                <th class="px-4 py-3 rounded-tl-lg">Ref ID & Time</th>
+                                <th class="px-4 py-3">Service & Document</th>
+                                <th class="px-4 py-3">Customer Info</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 rounded-tr-lg text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody" class="divide-y divide-gray-100 dark:divide-slate-700">
+                            <tr><td colspan="5" class="text-center py-6">Loading orders from database...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== GLOBAL FOOTER ==================== -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 mt-auto py-6 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium text-center md:text-left">
+                &copy; <span id="currentYear"></span> Cyber Gigs. All Rights Reserved.
+            </p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1.5">
+                Designed for fast digital services <i class="fa-solid fa-bolt text-blue-500"></i>
+            </p>
+        </div>
+    </footer>
+
+    <!-- ==================== MODALS WITH ANIMATIONS ==================== -->
+
+    <!-- Admin Search Results Modal -->
+    <div id="adminSearchModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300 max-h-[90vh]">
+            <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-user-magnifying-glass mr-2"></i>Search Results</h3>
+                <button onclick="hideModalAnim('adminSearchModal')" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 flex-1" id="adminSearchResultsBody">
+                <!-- Dynamically populated cards go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-100 dark:border-slate-700 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <i class="fa-solid fa-shield-halved text-5xl text-emerald-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Supervisor Access</h3>
+            <input type="password" id="adminPassword" placeholder="Enter PIN" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-xl p-3 mb-4 text-center tracking-widest text-lg focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white transition-colors">
+            <p id="adminError" class="text-red-500 text-sm font-semibold mb-4 hidden">Incorrect PIN.</p>
+            <div class="flex gap-3">
+                <button onclick="closeAdminLogin()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-transform">Cancel</button>
+                <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-transform">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Service Modal -->
+    <div id="addServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-folder-plus text-blue-400 mr-2"></i>Add New Service</h3>
+                <button onclick="closeAddServiceModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (English)</label>
+                    <input type="text" id="newSrvEn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (Bengali)</label>
+                    <input type="text" id="newSrvBn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">FontAwesome Icon Class</label>
+                    <input type="text" id="newSrvIcon" placeholder="e.g., fa-file-pdf" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Is this a Travel Service?</label>
+                    <select id="newSrvTravel" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                        <option value="false">No (Standard Form)</option>
+                        <option value="true">Yes (Passenger Form)</option>
+                    </select>
+                </div>
+                <button onclick="addNewService()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Save Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supervisor Screenshot Viewer Modal -->
+    <div id="imageViewerModal" class="fixed inset-0 hidden items-center justify-center z-[80] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/95 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full border border-gray-100 dark:border-slate-700 flex flex-col max-h-[90vh] opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-image text-blue-500 mr-2"></i>Attached Screenshot</h3>
+                <button onclick="closeImageViewer()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 overflow-auto flex-1 flex justify-center items-center bg-gray-50 dark:bg-slate-900 rounded-b-2xl">
+                <img id="viewerImageSrc" src="" class="max-w-full h-auto object-contain rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Modal for Customers -->
+    <div id="trackModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-satellite-dish mr-2"></i>Track Order</h3>
+                <button onclick="closeTrackModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="lblTrackDesc">Enter your details below to check the live status of your service requests.</p>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackName">Customer Name</label>
+                    <input type="text" id="trackName" placeholder="Exact name used" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackMob">Mobile Number</label>
+                    <input type="tel" id="trackMobile" placeholder="10-digit number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500">
+                </div>
+                <button onclick="trackOrderSubmit()" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 mt-2 rounded-xl shadow transition-transform" id="btnTrackSubmit">
+                    Search Orders
+                </button>
+                <div id="trackResults" class="mt-4 max-h-60 overflow-y-auto custom-scrollbar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Order Modal -->
+    <div id="orderModal" class="fixed inset-0 hidden items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeModal()"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 dark:border-slate-700 max-h-[90vh] flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex justify-between items-center shrink-0">
+                <h3 id="modalTitle" class="text-lg font-bold">Place Order</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+                    <p class="text-xs text-slate-500 font-bold uppercase mb-1" id="lblService">Selected Service:</p>
+                    <p class="text-lg font-bold text-slate-900 dark:text-white mb-3" id="displayService">...</p>
+                    <p class="text-xs text-slate-500 font-bold uppercase mb-1" id="lblRef">Reference No:</p>
+                    <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400" id="displayRef">...</p>
+                </div>
+
+                <div id="standardFields" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblName">Customer Name</label>
+                        <input type="text" id="custName" placeholder="Enter full name" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStdMob">Mobile Number</label>
+                        <input type="tel" id="custMobile" placeholder="10-digit mobile number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                    </div>
+                </div>
+
+                <div id="travelFields" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblNumPax">No. of Passengers</label>
+                            <input type="number" id="numPassengers" min="1" max="10" value="1" onchange="renderPaxBlocks()" oninput="renderPaxBlocks()" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblMob">Mobile No (Contact)</label>
+                            <input type="tel" id="contactMobile" placeholder="Contact number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div id="paxBlocksContainer" class="space-y-3"></div>
+                </div>
+
+                <div>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStep1">Step 1: Send details to WhatsApp</p>
+                    <a id="waLink" href="#" target="_blank" onclick="updateWaLink()" class="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-md transition-transform">
+                        <i class="fa-brands fa-whatsapp text-2xl"></i> <span id="btnWa">Message +91 82508 00320</span>
+                    </a>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStep2">Step 2: Upload Chat Screenshot</p>
+                    <input type="file" id="screenshot" accept=".jpg, .jpeg, .png, .webp, .bmp" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-slate-700 file:text-blue-700 dark:file:text-blue-400 cursor-pointer border border-gray-300 dark:border-slate-600 rounded-xl p-1.5">
+                    <p class="text-xs text-gray-500 mt-1.5" id="lblFileRule">Max 2MB. Formats: JPG, PNG, WEBP.</p>
+                </div>
+
+                <button id="submitBtn" onclick="processOrderDatabaseAndAnimation()" class="order-btn-truck shrink-0" disabled>
+                    <div class="road-lines"></div>
+                    <div class="box-drop"></div>
+                    <div class="truck-wrapper">
+                        <svg width="64" height="34" viewBox="0 0 64 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="0" y="4" width="40" height="22" rx="2" fill="#38BDF8"/>
+                            <line x1="20" y1="4" x2="20" y2="26" stroke="#0284C7" stroke-width="1.5"/>
+                            <path d="M40 10H54L62 18V26H40V10Z" fill="#0284C7"/>
+                            <path d="M43 12H52L57 17H43V12Z" fill="#BAE6FD"/>
+                            <rect x="61" y="22" width="3" height="4" fill="#64748B"/>
+                            <g class="wheel" style="transform-origin: 12px 26px;"><circle cx="12" cy="26" r="5" fill="#1E293B"/><circle cx="12" cy="26" r="2" fill="#94A3B8"/></g>
+                            <g class="wheel" style="transform-origin: 48px 26px;"><circle cx="48" cy="26" r="5" fill="#1E293B"/><circle cx="48" cy="26" r="2" fill="#94A3B8"/></g>
+                        </svg>
+                    </div>
+                    <span class="default-text" id="btnComplete"><i class="fa-solid fa-box-archive"></i> Complete Order</span>
+                    <span class="success-text">
+                        <span>Order Placed</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Confirmation Modal -->
+    <div id="confirmationScreen" class="fixed inset-0 hidden items-center justify-center z-[60] px-4">
+        <div class="modal-overlay absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative text-center max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-700 opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl final-check-animated"><i class="fa-solid fa-check"></i></div>
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2" id="confTitle">Order Confirmed!</h2>
+            <p class="text-lg text-slate-600 dark:text-slate-400 mb-6 font-medium">Ref No: <span class="font-mono font-bold text-blue-600" id="confRefSpan"></span></p>
+            <div class="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-8 bg-slate-50 dark:bg-slate-900 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i> <span id="confPdf">Generating PDF receipt...</span>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-slate-900 dark:bg-slate-700 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-transform">Done / Place New Order</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('currentYear').innerText = new Date().getFullYear();
+
+        /* ==========================================
+           1. MODAL & VIEW ANIMATION SYSTEM
+           ========================================== */
+        function showModalAnim(id) {
+            const m = document.getElementById(id);
+            const ov = m.querySelector('.modal-overlay');
+            const ct = m.querySelector('.modal-content');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            void m.offsetWidth; // Force Reflow
+            if(ov) ov.classList.replace('opacity-0', 'opacity-100');
+            if(ct) {
+                ct.classList.replace('opacity-0', 'opacity-100');
+                ct.classList.replace('scale-95', 'scale-100');
+                ct.classList.replace('translate-y-4', 'translate-y-0');
+            }
+            document.body.classList.add('modal-open', 'overflow-hidden');
+        }
+
+        function hideModalAnim(id) {
+            const m = document.getElementById(id);
+            const ov = m.querySelector('.modal-overlay');
+            const ct = m.querySelector('.modal-content');
+            if(ov) ov.classList.replace('opacity-100', 'opacity-0');
+            if(ct) {
+                ct.classList.replace('opacity-100', 'opacity-0');
+                ct.classList.replace('scale-100', 'scale-95');
+                ct.classList.replace('translate-y-0', 'translate-y-4');
+            }
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+            document.body.classList.remove('modal-open', 'overflow-hidden');
+        }
+
+        function switchView(view) {
+            const cApp = document.getElementById('customerApp');
+            const aApp = document.getElementById('adminApp');
+            
+            const fadeOut = (el) => {
+                el.classList.replace('opacity-100', 'opacity-0');
+                el.classList.replace('translate-y-0', 'translate-y-4');
+                setTimeout(() => { el.classList.add('hidden'); el.classList.remove('block'); }, 300);
+            };
+            const fadeIn = (el) => {
+                setTimeout(() => {
+                    el.classList.remove('hidden'); el.classList.add('block');
+                    void el.offsetWidth;
+                    el.classList.replace('opacity-0', 'opacity-100');
+                    el.classList.replace('translate-y-4', 'translate-y-0');
+                }, 300);
+            };
+
+            if(view === 'admin') { fadeOut(cApp); fadeIn(aApp); loadOrders(); } 
+            else { isAdminLoggedIn = false; fadeOut(aApp); fadeIn(cApp); }
+        }
+
+        /* ==========================================
+           2. FIREBASE CONFIGURATION
+           ========================================== */
+        const firebaseConfig = {
+            apiKey: "AIzaSyCd3Q8uMh05xhyVvu0_hjd0JTBhiro6Fvo",
+            authDomain: "shop-orders-51f72.firebaseapp.com",
+            projectId: "shop-orders-51f72",
+            storageBucket: "shop-orders-51f72.firebasestorage.app",
+            messagingSenderId: "670783330696",
+            appId: "1:670783330696:web:acc2b1f6fdc7924c13823d"
+        };
+        
+        let db;
+        if(firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        }
+
+        /* ==========================================
+           CORE LOGIC & UI MANAGEMENT
+           ========================================== */
+        let isAdminLoggedIn = false;
+        let services = [];
+        window.orderImages = {}; 
+        window.globalOrdersList = []; // Added for Local Supervisor Searching
+
+        const defaultServices = [
+            { en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
+            { en: 'KYC for LPG (HP Gas)', bn: 'এলপিজি কেওয়াইসি (এইচপি গ্যাস)', icon: 'fa-fire-burner', isTravel: false },
+            { en: 'Train Ticket', bn: 'ট্রেন টিকিট', icon: 'fa-train', isTravel: true },
+            { en: 'Plane Ticket', bn: 'বিমান টিকিট', icon: 'fa-plane', isTravel: true }
+        ];
+
+        let currentLang = 'en';
+        let currentRefNo = '';
+        let currentServiceObj = null;
+
+        const uiText = {
+            en: { title: "Select a Service to Order", sub: "Fast, reliable, and professional digital services.", modalTitle: "Place Order", lblService: "Selected Service:", lblRef: "Reference No:", lblName: "Customer Name", lblStdMob: "Mobile Number", lblStep1: "Step 1: Send details to WhatsApp", btnWa: "Message +91 82508 00320", lblStep2: "Step 2: Upload Chat Screenshot", lblFileRule: "Max 2MB. Formats: JPG, PNG, WEBP, BMP, JPEG.", btnComplete: "Complete Order", confTitle: "Order Confirmed!", confPdf: "Generating & Downloading PDF receipt...", lblNumPax: "No. of Passengers", lblMob: "Mobile No (Contact)" },
+            bn: { title: "অর্ডার করতে একটি পরিষেবা নির্বাচন করুন", sub: "দ্রুত, নির্ভরযোগ্য এবং পেশাদার ডিজিটাল পরিষেবা।", modalTitle: "অর্ডার করুন", lblService: "নির্বাচিত পরিষেবা:", lblRef: "রেফারেন্স নম্বর:", lblName: "গ্রাহকের নাম", lblStdMob: "মোবাইল নম্বর", lblStep1: "ধাপ ১: হোয়াটসঅ্যাপে বিবরণ পাঠান", btnWa: "মেসেজ করুন +91 82508 00320", lblStep2: "ধাপ ২: চ্যাটের স্ক্রিনশট আপলোড করুন", lblFileRule: "সর্বোচ্চ 2MB। ফরম্যাট: JPG, PNG, WEBP, BMP, JPEG।", btnComplete: "অর্ডার সম্পন্ন করুন", confTitle: "অর্ডার নিশ্চিত হয়েছে!", confPdf: "পিডিএফ রসিদ তৈরি এবং ডাউনলোড হচ্ছে...", lblNumPax: "যাত্রীর সংখ্যা", lblMob: "যোগাযোগ নম্বর" }
+        };
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark'); localStorage.setItem('color-theme', 'light');
+            } else {
+                html.classList.add('dark'); localStorage.setItem('color-theme', 'dark');
+            }
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-yellow-300' : 'fa-solid fa-moon text-slate-800';
+        }
+
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+        async function fetchServices() {
+            if(db) {
+                try {
+                    const snapshot = await db.collection('services').get();
+                    if(snapshot.empty) {
+                        defaultServices.forEach(s => db.collection('services').add(s));
+                        services = defaultServices;
+                    } else {
+                        services = []; snapshot.forEach(doc => services.push({ id: doc.id, ...doc.data() }));
+                    }
+                } catch (e) {
+                    services = defaultServices;
+                }
+            } else { services = defaultServices; }
+            document.getElementById('loadingServices').classList.add('hidden');
+            document.getElementById('servicesGrid').classList.remove('hidden');
+            renderServicesGrid();
+        }
+
+        function renderServicesGrid() {
+            const grid = document.getElementById('servicesGrid'); grid.innerHTML = '';
+            services.forEach(srv => {
+                const title = currentLang === 'en' ? srv.en : srv.bn;
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer flex flex-col items-center text-center gap-4 group";
+                card.onclick = () => openCustomerModal(srv);
+                card.innerHTML = `<div class="h-16 w-16 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition duration-300 shadow-inner"><i class="fa-solid ${srv.icon || 'fa-file'}"></i></div><h3 class="font-bold text-gray-800 dark:text-gray-100 text-base leading-snug">${title}</h3>`;
+                grid.appendChild(card);
+            });
+            updateCustomerUIText();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'bn' : 'en';
+            renderServicesGrid();
+            if(!document.getElementById('orderModal').classList.contains('hidden')) {
+                updateCustomerUIText();
+                if(currentServiceObj && currentServiceObj.isTravel) renderPaxBlocks(true);
+            }
+        }
+
+        function updateCustomerUIText() {
+            const t = uiText[currentLang];
+            document.getElementById('pageTitle').innerText = t.title; document.getElementById('pageSub').innerText = t.sub;
+            document.getElementById('modalTitle').innerText = t.modalTitle; document.getElementById('lblService').innerText = t.lblService;
+            document.getElementById('lblRef').innerText = t.lblRef; document.getElementById('lblName').innerText = t.lblName;
+            document.getElementById('lblStdMob').innerText = t.lblStdMob; document.getElementById('lblStep1').innerText = t.lblStep1;
+            document.getElementById('btnWa').innerText = t.btnWa; document.getElementById('lblStep2').innerText = t.lblStep2;
+            document.getElementById('lblFileRule').innerText = t.lblFileRule; document.getElementById('btnComplete').innerHTML = `<i class="fa-solid fa-box-archive"></i> ${t.btnComplete}`;
+            document.getElementById('lblNumPax').innerText = t.lblNumPax; document.getElementById('lblMob').innerText = t.lblMob;
+            document.getElementById('btnNavTrack').innerHTML = currentLang === 'en' ? '<i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Track</span>' : '<i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">ট্র্যাক</span>';
+        }
+
+        /* ==========================================
+           CUSTOMER ORDERING & DUPLICATE CHECK
+           ========================================== */
+        function openCustomerModal(srvObj) {
+            currentServiceObj = srvObj;
+            const date = new Date();
+            currentRefNo = `CG-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}-${Math.floor(1000+Math.random()*9000)}`;
+            document.getElementById('displayService').innerText = currentLang === 'en' ? srvObj.en : srvObj.bn;
+            document.getElementById('displayRef').innerText = currentRefNo;
+            
+            if (srvObj.isTravel || srvObj.isTravel === "true") {
+                document.getElementById('standardFields').classList.add('hidden'); document.getElementById('travelFields').classList.remove('hidden');
+                document.getElementById('numPassengers').value = 1; document.getElementById('contactMobile').value = '';
+                renderPaxBlocks(true);
+            } else {
+                document.getElementById('standardFields').classList.remove('hidden'); document.getElementById('travelFields').classList.add('hidden');
+                document.getElementById('custName').value = ''; document.getElementById('custMobile').value = '';
+            }
+            document.getElementById('screenshot').value = '';
+            const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.classList.remove('animating', 'done');
+            updateWaLink();
+            showModalAnim('orderModal');
+        }
+
+        function closeModal() { hideModalAnim('orderModal'); }
+
+        function getPaxBlockHTML(index) {
+            const t = currentLang === 'en' ? { p: 'Passenger', n: 'Name', a: 'Age', s: 'Sex', m: 'Male', f: 'Female'} : { p: 'যাত্রী', n: 'নাম', a: 'বয়স', s: 'লিঙ্গ', m: 'পুরুষ', f: 'মহিলা'};
+            return `<div class="pax-block p-4 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50/50 dark:bg-slate-800/50 space-y-3"><p class="font-bold text-sm text-blue-600">${t.p} ${index + 1}</p><input type="text" class="pax-name w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="${t.n}"><div class="flex gap-3"><input type="number" class="pax-age w-1/2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="${t.a}"><select class="pax-sex w-1/2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"><option value="">${t.s}</option><option value="M">${t.m}</option><option value="F">${t.f}</option></select></div></div>`;
+        }
+
+        function renderPaxBlocks(force = false) {
+            const count = Math.min(Math.max(parseInt(document.getElementById('numPassengers').value) || 1, 1), 20);
+            const container = document.getElementById('paxBlocksContainer');
+            if (force) container.innerHTML = '';
+            
+            const curr = container.children.length;
+            if (count > curr) { for(let i=curr; i<count; i++) container.insertAdjacentHTML('beforeend', getPaxBlockHTML(i)); } 
+            else if (count < curr) { for(let i=curr; i>count; i--) container.removeChild(container.lastElementChild); }
+            
+            container.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateWaLink));
+            updateWaLink();
+        }
+
+        function getFormData() {
+            let name = "", mobile = "";
+            let isTravel = currentServiceObj.isTravel === true || currentServiceObj.isTravel === "true";
+            if(isTravel) {
+                mobile = document.getElementById('contactMobile').value.trim();
+                const firstPax = document.querySelector('.pax-name');
+                name = (firstPax && firstPax.value.trim()) ? firstPax.value.trim() : "";
+            } else {
+                name = document.getElementById('custName').value.trim(); mobile = document.getElementById('custMobile').value.trim();
+            }
+            return { name, mobile, isTravel };
+        }
+
+        function updateWaLink() {
+            const data = getFormData();
+            const srvName = currentLang === 'en' ? currentServiceObj.en : currentServiceObj.bn;
+            let msg = `Hello Cyber Gigs,\nHere are my order details:\n\n*Reference No:* ${currentRefNo}\n*Service:* ${srvName}\n`;
+            
+            if (data.isTravel) {
+                const numPax = document.getElementById('numPassengers').value;
+                msg += `*Contact Mobile:* ${data.mobile || "[Enter Mobile]"}\n*Total Passengers:* ${numPax}\n\n*Passenger Details:*\n`;
+                document.querySelectorAll('.pax-block').forEach((b, idx) => {
+                    const n = b.querySelector('.pax-name').value.trim(), a = b.querySelector('.pax-age').value.trim(), s = b.querySelector('.pax-sex').value;
+                    if(n||a||s) msg += `${idx+1}. Name: ${n||'-'}, Age: ${a||'-'}, Sex: ${s||'-'}\n`;
+                });
+            } else {
+                msg += `*Customer Name:* ${data.name || "[Enter Name]"}\n*Mobile Number:* ${data.mobile || "[Enter Mobile]"}`;
+            }
+            document.getElementById('waLink').href = `https://wa.me/918250800320?text=${encodeURIComponent(msg)}`;
+            
+            const file = document.getElementById('screenshot').files[0];
+            const isValidData = data.name.length > 0 && data.mobile.length >= 10;
+            const isValidFile = file && file.size <= 2 * 1024 * 1024;
+            document.getElementById('submitBtn').disabled = !(isValidData && isValidFile);
+        }
+
+        document.getElementById('custName').addEventListener('input', updateWaLink);
+        document.getElementById('custMobile').addEventListener('input', updateWaLink);
+        document.getElementById('contactMobile').addEventListener('input', updateWaLink);
+        document.getElementById('screenshot').addEventListener('change', updateWaLink);
+
+        /* Async Image Compressor */
+        function compressImageAsync(file) {
+            return new Promise((resolve) => {
+                if(!file) return resolve("");
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX = 1024; 
+                        let w = img.width, h = img.height;
+                        if(w > h && w > MAX) { h *= MAX/w; w = MAX; }
+                        else if(h > MAX) { w *= MAX/h; h = MAX; }
+                        canvas.width = w; canvas.height = h;
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function processOrderDatabaseAndAnimation() {
+            const btn = document.getElementById('submitBtn'); 
+            const originalText = document.getElementById('btnComplete').innerHTML;
+            const formData = getFormData();
+            
+            btn.disabled = true; document.getElementById('btnComplete').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            if(db) { 
+                try { 
+                    const snapshot = await db.collection('orders').where('customerMobile', '==', formData.mobile).get();
+                    let isDuplicate = false;
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (d.serviceNameEn === currentServiceObj.en && (d.status === 'Pending' || d.status === 'Approved')) {
+                            isDuplicate = true;
+                        }
+                    });
+
+                    if (isDuplicate) {
+                        alert(currentLang === 'en' ? "You already have an active request for this service. Please wait for it to be completed." : "আপনার ইতিমধ্যেই এই পরিষেবার জন্য একটি সক্রিয় অনুরোধ রয়েছে৷ এটি সম্পন্ন হওয়ার জন্য অনুগ্রহ করে অপেক্ষা করুন৷");
+                        btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
+                        return;
+                    }
+
+                    const file = document.getElementById('screenshot').files[0];
+                    const base64Str = await compressImageAsync(file);
+
+                    const orderData = {
+                        refId: currentRefNo, serviceNameEn: currentServiceObj.en,
+                        customerName: formData.name, customerMobile: formData.mobile,
+                        screenshotBase64: base64Str, timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "Pending"
+                    };
+                    await db.collection('orders').add(orderData); 
+                } catch (e) { 
+                    console.error(e); alert("An error occurred. Make sure Firestore is enabled.");
+                    btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
+                    return;
+                } 
+            }
+            
+            document.getElementById('btnComplete').innerHTML = originalText;
+            btn.classList.add('animating');
+            setTimeout(() => { 
+                btn.classList.remove('animating'); btn.classList.add('done'); 
+                setTimeout(() => showFinalConfirmationScreen(), 1200); 
+            }, 3200);
+        }
+
+        function showFinalConfirmationScreen() {
+            hideModalAnim('orderModal');
+            document.getElementById('confRefSpan').innerText = currentRefNo;
+            setTimeout(() => {
+                showModalAnim('confirmationScreen');
+                setTimeout(generateReceiptPDF, 800);
+            }, 300);
+        }
+
+        function generateReceiptPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+            const data = getFormData();
+            const sName = currentLang === 'en' ? currentServiceObj.en : currentServiceObj.bn;
+
+            doc.setFillColor(248, 250, 252); doc.rect(0, 0, pw, ph, 'F');
+            doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(15, 23, 42); doc.text("Cyber Gigs", pw/2, 30, { align: 'center' });
+            doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(71, 85, 105); doc.text("Address: Nakpul More", pw/2, 40, { align: 'center' });
+            doc.setDrawColor(203, 213, 225); doc.line(20, 48, pw-20, 48);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(30, 64, 175); doc.text("ORDER CONFIRMATION RECEIPT", pw/2, 68, { align: 'center' });
+            doc.setFontSize(13); doc.setTextColor(15, 23, 42);
+            doc.text(`Reference No:`, 30, 95); doc.setFont("helvetica", "normal"); doc.text(`${currentRefNo}`, 75, 95);
+            doc.setFont("helvetica", "bold"); doc.text(`Customer:`, 30, 110); doc.setFont("helvetica", "normal"); doc.text(`${data.name}`, 75, 110);
+            doc.setFont("helvetica", "bold"); doc.text(`Service:`, 30, 125); doc.setFont("helvetica", "normal"); doc.text(`${sName}`, 75, 125);
+
+            doc.setFillColor(15, 23, 42); doc.roundedRect(pw/2 - 45, 145, 90, 18, 9, 9, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Order Placed", pw/2 - 20, 157);
+            doc.setDrawColor(16, 185, 129); doc.setLineWidth(1.5);
+            const cX = pw/2 + 20, cY = 156; doc.line(cX-3.5, cY-3, cX, cY); doc.line(cX, cY, cX+6, cY-8);
+            
+            doc.setFont("times", "italic"); doc.setFontSize(16); doc.setTextColor(220, 38, 38); 
+            doc.text("Show it to the Owner of Shop when come to service", pw/2, 185, { align: 'center' });
+            doc.setDrawColor(203, 213, 225); doc.line(20, ph-30, pw-20, ph-30);
+            doc.setFont("helvetica", "italic"); doc.setFontSize(10); doc.setTextColor(100, 116, 139);
+            const currentY = new Date().getFullYear();
+            doc.text(`Copyright ${currentY}, Cyber Gigs, All Rights Reserved.`, pw/2, ph-18, { align: 'center' });
+            doc.save(`${currentRefNo}_Receipt.pdf`);
+        }
+
+        /* ==========================================
+           CUSTOMER ORDER TRACKING
+           ========================================== */
+        function openTrackModal() {
+            document.getElementById('trackName').value = ''; document.getElementById('trackMobile').value = ''; document.getElementById('trackResults').innerHTML = '';
+            showModalAnim('trackModal');
+        }
+        function closeTrackModal() { hideModalAnim('trackModal'); }
+
+        async function trackOrderSubmit() {
+            const name = document.getElementById('trackName').value.trim().toLowerCase();
+            const mobile = document.getElementById('trackMobile').value.trim();
+            const resultsDiv = document.getElementById('trackResults');
+            
+            if(!name || !mobile) { alert("Please enter both Name and Mobile Number."); return; }
+            resultsDiv.innerHTML = '<p class="text-center text-indigo-500 py-4"><i class="fa-solid fa-spinner fa-spin text-2xl"></i></p>';
+            if(!db) return;
+            
+            try {
+                const snapshot = await db.collection('orders').where('customerMobile', '==', mobile).get();
+                let foundHTML = '';
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if(d.customerName.toLowerCase() === name) {
+                        let statusUI = '';
+                        if(d.status === 'Pending') statusUI = '<span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-clock"></i> Pending</span>';
+                        if(d.status === 'Approved') statusUI = '<span class="text-blue-600 bg-blue-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-thumbs-up"></i> Approved</span>';
+                        if(d.status === 'Completed') statusUI = '<span class="text-emerald-600 bg-emerald-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-circle-check"></i> Completed</span>';
+                        if(d.status === 'Rejected') statusUI = '<span class="text-red-600 bg-red-100 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>';
+                        
+                        foundHTML += `
+                            <div class="border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-3 rounded-lg mb-3">
+                                <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${d.serviceNameEn}</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">Ref: ${d.refId}</p>
+                                    ${statusUI}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                if(foundHTML === '') { resultsDiv.innerHTML = '<p class="text-center text-red-500 py-4 font-semibold">No orders found for this Name and Mobile.</p>'; } 
+                else { resultsDiv.innerHTML = foundHTML; }
+            } catch(e) { console.error(e); resultsDiv.innerHTML = '<p class="text-center text-red-500">Error fetching data.</p>'; }
+        }
+
+        /* ==========================================
+           SUPERVISOR & ADD SERVICE PORTAL
+           ========================================== */
+        function openAdminLogin() {
+            document.getElementById('adminPassword').value = ''; document.getElementById('adminError').classList.add('hidden');
+            showModalAnim('adminLoginModal');
+        }
+        function closeAdminLogin() { hideModalAnim('adminLoginModal'); }
+
+        function verifyAdmin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if(pwd === "admin123") { isAdminLoggedIn = true; closeAdminLogin(); setTimeout(() => switchView('admin'), 300); } 
+            else { document.getElementById('adminError').classList.remove('hidden'); }
+        }
+
+        function logoutAdmin() { isAdminLoggedIn = false; switchView('customer'); }
+
+        function openAddServiceModal() {
+            if(!isAdminLoggedIn) { alert("Access Denied: Supervisor authentication required."); return; }
+            showModalAnim('addServiceModal');
+        }
+        function closeAddServiceModal() { hideModalAnim('addServiceModal'); }
+
+        function openImageViewer(docId) {
+            const imgData = window.orderImages[docId];
+            if(imgData) {
+                document.getElementById('viewerImageSrc').src = imgData;
+                showModalAnim('imageViewerModal');
+            }
+        }
+        function closeImageViewer() {
+            hideModalAnim('imageViewerModal');
+            setTimeout(() => { document.getElementById('viewerImageSrc').src = ''; }, 300);
+        }
+
+        async function updateOrderStatus(docId, newStatus) {
+            if(!db || !isAdminLoggedIn) return;
+            try { await db.collection('orders').doc(docId).update({ status: newStatus }); } catch(e) { console.error(e); alert("Failed to update status."); }
+        }
+
+        /* DYNAMIC ACTION UI REUSABLE FUNCTION */
+        function getActionUIParams(d, docId) {
+            const waMsg = encodeURIComponent("Order Confirmed! Please come to our shop for your service!");
+            const waURL = `https://wa.me/91${d.customerMobile}?text=${waMsg}`;
+            
+            let statusUI = '';
+            if(d.status === 'Pending') statusUI = '<span class="text-yellow-600 font-bold text-sm">Pending</span>';
+            else if(d.status === 'Approved') statusUI = '<span class="text-blue-600 font-bold text-sm">Approved</span>';
+            else if(d.status === 'Completed') statusUI = '<span class="text-emerald-600 font-bold text-sm"><i class="fa-solid fa-check-circle"></i> Completed</span>';
+            else if(d.status === 'Rejected') statusUI = '<span class="text-red-600 font-bold text-sm"><i class="fa-solid fa-xmark-circle"></i> Rejected</span>';
+
+            let actionUI = '';
+            if (d.status === 'Pending') {
+                actionUI = `
+                    <div class="flex flex-col gap-2 w-full">
+                        <a href="${waURL}" target="_blank" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-brands fa-whatsapp"></i> Chat</a>
+                        <div class="flex gap-2 w-full">
+                            <button onclick="updateOrderStatus('${docId}', 'Approved')" class="w-1/2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1.5 rounded-lg text-xs font-bold transition">Approve</button>
+                            <button onclick="updateOrderStatus('${docId}', 'Rejected')" class="w-1/2 bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1.5 rounded-lg text-xs font-bold transition">Reject</button>
+                        </div>
+                    </div>
+                `;
+            } else if (d.status === 'Approved') {
+                actionUI = `<button onclick="updateOrderStatus('${docId}', 'Completed')" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-check"></i> Complete Order</button>`;
+            } else { actionUI = `<span class="text-gray-400 text-xs italic block text-center">Closed</span>`; }
+
+            return { statusUI, actionUI };
+        }
+
+        function loadOrders() {
+            if(!db || !isAdminLoggedIn) return;
+            const tbody = document.getElementById('ordersTableBody');
+            
+            db.collection('orders').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                tbody.innerHTML = '';
+                window.globalOrdersList = []; // Reset local cache for searching
+
+                if(snapshot.empty) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No recent orders found.</td></tr>`; return; }
+                
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    d.id = doc.id;
+                    window.globalOrdersList.push(d); // Push to cache
+
+                    const dateStr = d.timestamp ? d.timestamp.toDate().toLocaleString() : "Just now";
+                    
+                    let docLink = '';
+                    if (d.screenshotBase64) {
+                        window.orderImages[doc.id] = d.screenshotBase64;
+                        docLink = `<button onclick="openImageViewer('${doc.id}')" class="text-blue-600 dark:text-blue-400 text-xs mt-2 inline-flex items-center gap-1 hover:underline"><i class="fa-solid fa-image"></i> View Document</button>`;
+                    }
+
+                    const { statusUI, actionUI } = getActionUIParams(d, doc.id);
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition border-b border-gray-100 dark:border-slate-700";
+                    tr.innerHTML = `
+                        <td class="px-4 py-4"><span class="font-mono font-bold text-blue-600 dark:text-blue-400">${d.refId}</span><br><span class="text-xs text-gray-500">${dateStr}</span></td>
+                        <td class="px-4 py-4 font-medium text-gray-800 dark:text-gray-200">${d.serviceNameEn}<br>${docLink}</td>
+                        <td class="px-4 py-4"><p class="font-bold text-gray-800 dark:text-gray-200">${d.customerName}</p><p class="text-sm text-gray-500 font-mono"><i class="fa-solid fa-phone mr-1 text-xs"></i>${d.customerMobile}</p></td>
+                        <td class="px-4 py-4 text-center">${statusUI}</td>
+                        <td class="px-4 py-4 align-middle">${actionUI}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Auto-refresh search modal if it's currently open
+                if (!document.getElementById('adminSearchModal').classList.contains('hidden')) {
+                    performAdminSearch(true);
+                }
+            });
+        }
+
+        // Supervisor Search Bar Logic
+        function performAdminSearch(isRefresh = false) {
+            const query = document.getElementById('adminSearchInput').value.trim().toLowerCase();
+            if (!query && !isRefresh) { alert("Please enter a customer name to search."); return; }
+            if (!query && isRefresh) return; 
+
+            const results = window.globalOrdersList.filter(o => o.customerName.toLowerCase().includes(query));
+            const container = document.getElementById('adminSearchResultsBody');
+            container.innerHTML = '';
+
+            if (results.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 py-6">No matching customers found.</p>';
+            } else {
+                results.forEach(d => {
+                    const { statusUI, actionUI } = getActionUIParams(d, d.id);
+                    const card = `
+                        <div class="border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 p-4 rounded-xl mb-4 flex flex-col md:flex-row justify-between gap-4 shadow-sm">
+                            <div class="space-y-1 flex-1">
+                                <div class="flex justify-between items-start">
+                                    <p class="font-bold text-gray-800 dark:text-gray-200 text-lg">${d.customerName}</p>
+                                    ${statusUI}
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400"><i class="fa-solid fa-phone text-xs mr-1"></i> ${d.customerMobile}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 font-mono text-blue-600 dark:text-blue-400 font-bold">${d.refId}</p>
+                                <p class="text-sm text-gray-800 dark:text-gray-200 font-medium mt-2">Service: ${d.serviceNameEn}</p>
+                            </div>
+                            <div class="w-full md:w-48 flex flex-col justify-center">
+                                ${actionUI}
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', card);
+                });
+            }
+            
+            if (!isRefresh) showModalAnim('adminSearchModal');
+        }
+
+        async function addNewService() {
+            if(!isAdminLoggedIn) return;
+            if(!db) { alert("Please configure Firebase credentials first."); return; }
+            
+            const en = document.getElementById('newSrvEn').value.trim();
+            const bn = document.getElementById('newSrvBn').value.trim();
+            const icon = document.getElementById('newSrvIcon').value.trim() || 'fa-file';
+            const isTravel = document.getElementById('newSrvTravel').value === "true";
+
+            if(!en || !bn) { alert("Please provide both English and Bengali names."); return; }
+            try {
+                await db.collection('services').add({ en, bn, icon, isTravel });
+                alert("Service added successfully!");
+                document.getElementById('newSrvEn').value = ''; document.getElementById('newSrvBn').value = ''; document.getElementById('newSrvIcon').value = '';
+                closeAddServiceModal(); fetchServices();
+            } catch (error) { console.error(error); alert("Failed to add service."); }
+        }
+
+        window.onload = fetchServices;
+    </script>
+</body>
+</html>
