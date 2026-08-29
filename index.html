@@ -69,19 +69,19 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-laptop-code text-2xl text-blue-400"></i>
-                    <span class="font-bold text-xl tracking-wide cursor-pointer transition-transform" onclick="if(!isAdminLoggedIn) switchView('customer')">Cyber Gigs</span>
+                    <span class="font-bold text-xl tracking-wide cursor-pointer transition-transform hover:scale-105" onclick="if(!isAdminLoggedIn) switchView('customer')">Cyber Gigs</span>
                 </div>
                 <div class="flex gap-2 sm:gap-3">
-                    <button onclick="openTrackModal()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2 transition-transform" id="btnNavTrack">
+                    <button onclick="openTrackModal()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2 transition-transform hover:scale-105" id="btnNavTrack">
                         <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Track</span>
                     </button>
-                    <button onclick="openAdminLogin()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center transition-transform">
+                    <button onclick="openAdminLogin()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center transition-transform hover:scale-105">
                         <i class="fa-solid fa-shield-halved text-emerald-400"></i>
                     </button>
-                    <button onclick="toggleTheme()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center w-12 transition-transform">
+                    <button onclick="toggleTheme()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-medium shadow flex items-center justify-center w-12 transition-transform hover:scale-105">
                         <i id="themeIcon" class="fa-solid fa-moon text-yellow-300"></i>
                     </button>
-                    <button id="langToggle" onclick="toggleLanguage()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium shadow transition-transform">
+                    <button id="langToggle" onclick="toggleLanguage()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium shadow transition-transform hover:scale-105">
                         EN / বাংলা
                     </button>
                 </div>
@@ -122,24 +122,27 @@
                     <p class="text-gray-500 dark:text-gray-400">Manage incoming orders and update service catalog.</p>
                 </div>
                 <div class="flex flex-wrap gap-2 md:gap-3">
-                    <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform">
+                    <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
                         <i class="fa-solid fa-folder-plus"></i> <span class="hidden sm:inline">Add Service</span>
                     </button>
-                    <button onclick="openDeleteServiceModal()" class="bg-red-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-red-700 font-bold shadow-md flex items-center gap-2 transition-transform">
+                    <button onclick="openDeleteServiceModal()" class="bg-red-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-red-700 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
                         <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Delete Service</span>
                     </button>
-                    <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform">
+                    <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
                     </button>
                 </div>
             </div>
 
+            <!-- Orders Data Table & Search -->
             <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Recent Orders</h2>
                     <div class="flex w-full sm:w-auto gap-2">
                         <input type="text" id="adminSearchInput" placeholder="Search Customer Name..." class="w-full sm:w-64 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500 transition-colors">
-                        <button onclick="performAdminSearch()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-transform">Search</button>
+                        <button onclick="performAdminSearch()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-transform hover:scale-105">
+                            Search
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -147,7 +150,7 @@
                         <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 uppercase text-xs font-semibold">
                             <tr>
                                 <th class="px-4 py-3 rounded-tl-lg">Ref ID & Time</th>
-                                <th class="px-4 py-3">Services & Docs</th>
+                                <th class="px-4 py-3">Services & Document</th>
                                 <th class="px-4 py-3">Customer Info</th>
                                 <th class="px-4 py-3 text-center">Status</th>
                                 <th class="px-4 py-3 rounded-tr-lg text-center">Action</th>
@@ -165,12 +168,44 @@
     <!-- ==================== GLOBAL FOOTER ==================== -->
     <footer class="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 mt-auto py-6 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium text-center md:text-left">&copy; <span id="currentYear"></span> Cyber Gigs. All Rights Reserved.</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1.5">Designed for fast digital services <i class="fa-solid fa-bolt text-blue-500"></i></p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium text-center md:text-left">
+                &copy; <span id="currentYear"></span> Cyber Gigs. All Rights Reserved.
+            </p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1.5">
+                Designed for fast digital services <i class="fa-solid fa-bolt text-blue-500"></i>
+            </p>
         </div>
     </footer>
 
-    <!-- ==================== MODALS ==================== -->
+    <!-- ==================== CUSTOM ALERTS & CONFIRM MODALS ==================== -->
+    <div id="customAlertModal" class="fixed inset-0 hidden items-center justify-center z-[100] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div id="alertIconContainer" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
+                <i id="alertIcon" class="fa-solid fa-circle-info text-xl"></i>
+            </div>
+            <h3 id="alertTitle" class="text-lg font-bold text-gray-900 dark:text-white mb-2">Notification</h3>
+            <p id="alertMessage" class="text-sm text-gray-500 dark:text-gray-400 mb-6"></p>
+            <button onclick="hideModalAnim('customAlertModal')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-transform hover:scale-105">OK</button>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="fixed inset-0 hidden items-center justify-center z-[100] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+            <h3 id="confirmTitle" class="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirm Action</h3>
+            <p id="confirmMessage" class="text-sm text-gray-500 dark:text-gray-400 mb-6"></p>
+            <div class="flex gap-3">
+                <button onclick="hideModalAnim('customConfirmModal')" class="w-1/2 bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-white py-2.5 rounded-xl font-bold transition-transform hover:scale-105">Cancel</button>
+                <button id="btnConfirmYes" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold transition-transform hover:scale-105">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN MODALS ==================== -->
 
     <!-- Admin Search Results Modal -->
     <div id="adminSearchModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
@@ -184,7 +219,123 @@
         </div>
     </div>
 
-    <!-- Unified Supervisor Action Modal (Approve / Reject) -->
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-100 dark:border-slate-700 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <i class="fa-solid fa-shield-halved text-5xl text-emerald-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Supervisor Access</h3>
+            <input type="password" id="adminPassword" placeholder="Enter PIN" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-xl p-3 mb-4 text-center tracking-widest text-lg focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white transition-colors">
+            <p id="adminError" class="text-red-500 text-sm font-semibold mb-4 hidden">Incorrect PIN.</p>
+            <div class="flex gap-3">
+                <button onclick="closeAdminLogin()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-transform">Cancel</button>
+                <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-transform">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Service Modal (With AI Engine) -->
+    <div id="addServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-folder-plus text-blue-400 mr-2"></i>Add New Service</h3>
+                <button onclick="closeAddServiceModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (English)</label>
+                    <input type="text" id="newSrvEn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (Bengali)</label>
+                    <input type="text" id="newSrvBn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                
+                <div class="bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 p-3 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-bold text-blue-800 dark:text-blue-400"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Icon Selection</label>
+                        <i id="aiIconPreview" class="fa-solid fa-file text-blue-500 text-xl transition-all duration-300"></i>
+                    </div>
+                    <input type="text" id="newSrvIcon" placeholder="e.g., fa-file-pdf" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500">
+                    <p class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">Start typing a service name to auto-detect icon.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Is this a Travel Service?</label>
+                    <select id="newSrvTravel" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
+                        <option value="false">No (Standard Form)</option>
+                        <option value="true">Yes (Passenger Form)</option>
+                    </select>
+                </div>
+                <button onclick="addNewService()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Save Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Service Modal -->
+    <div id="deleteServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-red-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-trash-can mr-2"></i>Delete Service</h3>
+                <button onclick="closeDeleteServiceModal()" class="text-red-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select a Service to Remove</label>
+                    <select id="deleteSrvSelect" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-3 dark:text-white outline-none focus:border-red-500"></select>
+                </div>
+                <button id="btnConfirmDelete" onclick="deleteSelectedService()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Delete Selected Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supervisor Screenshot Viewer Modal -->
+    <div id="imageViewerModal" class="fixed inset-0 hidden items-center justify-center z-[90] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/95 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full border border-gray-100 dark:border-slate-700 flex flex-col max-h-[90vh] opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-image text-blue-500 mr-2"></i>Attached Document</h3>
+                <button onclick="closeImageViewer()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 overflow-auto flex-1 flex justify-center items-center bg-gray-50 dark:bg-slate-900 rounded-b-2xl">
+                <img id="viewerImageSrc" src="" class="max-w-full h-auto object-contain rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Modal for Customers -->
+    <div id="trackModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-satellite-dish mr-2"></i>Track Order</h3>
+                <button onclick="closeTrackModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="lblTrackDesc">Enter your details below to check the live status of your service requests.</p>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackName">Customer Name</label>
+                    <input type="text" id="trackName" placeholder="Exact name used" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackMob">Mobile Number</label>
+                    <input type="tel" id="trackMobile" placeholder="10-digit number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500">
+                </div>
+                <button onclick="trackOrderSubmit()" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 mt-2 rounded-xl shadow transition-transform hover:scale-105" id="btnTrackSubmit">
+                    Search Orders
+                </button>
+                <div id="trackResults" class="mt-4 max-h-60 overflow-y-auto custom-scrollbar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Supervisor Action Modal (Approve / Reject w/ Screenshot) -->
     <div id="adminActionModal" class="fixed inset-0 hidden items-center justify-center z-[80] px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
         <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
@@ -221,102 +372,7 @@
         </div>
     </div>
 
-    <!-- Admin Login Modal -->
-    <div id="adminLoginModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-100 dark:border-slate-700 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <i class="fa-solid fa-shield-halved text-5xl text-emerald-500 mb-4"></i>
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Supervisor Access</h3>
-            <input type="password" id="adminPassword" placeholder="Enter PIN" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-xl p-3 mb-4 text-center tracking-widest text-lg focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white transition-colors">
-            <p id="adminError" class="text-red-500 text-sm font-semibold mb-4 hidden">Incorrect PIN.</p>
-            <div class="flex gap-3">
-                <button onclick="closeAdminLogin()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-transform">Cancel</button>
-                <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-transform">Login</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add New Service Modal -->
-    <div id="addServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <div class="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex justify-between items-center">
-                <h3 class="text-lg font-bold"><i class="fa-solid fa-folder-plus text-blue-400 mr-2"></i>Add New Service</h3>
-                <button onclick="closeAddServiceModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (English)</label><input type="text" id="newSrvEn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500"></div>
-                <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Service Name (Bengali)</label><input type="text" id="newSrvBn" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500"></div>
-                
-                <div class="bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 p-3 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-bold text-blue-800 dark:text-blue-400"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Icon Selection</label>
-                        <i id="aiIconPreview" class="fa-solid fa-file text-blue-500 text-xl transition-all duration-300"></i>
-                    </div>
-                    <input type="text" id="newSrvIcon" placeholder="e.g., fa-file-pdf" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500">
-                    <p class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">Start typing a service name to auto-detect icon.</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Is this a Travel Service?</label>
-                    <select id="newSrvTravel" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-blue-500">
-                        <option value="false">No (Standard Form)</option>
-                        <option value="true">Yes (Passenger Form)</option>
-                    </select>
-                </div>
-                <button onclick="addNewService()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">Save Service</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Service Modal -->
-    <div id="deleteServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <div class="px-6 py-4 bg-red-600 text-white flex justify-between items-center">
-                <h3 class="text-lg font-bold"><i class="fa-solid fa-trash-can mr-2"></i>Delete Service</h3>
-                <button onclick="closeDeleteServiceModal()" class="text-red-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select a Service to Remove</label><select id="deleteSrvSelect" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-3 dark:text-white outline-none focus:border-red-500"></select></div>
-                <button onclick="deleteSelectedService()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">Confirm Deletion</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- General Image Viewer Modal -->
-    <div id="imageViewerModal" class="fixed inset-0 hidden items-center justify-center z-[90] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/95 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full border border-gray-100 dark:border-slate-700 flex flex-col max-h-[90vh] opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-image text-blue-500 mr-2"></i>Attached Document</h3>
-                <button onclick="closeImageViewer()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-4 overflow-auto flex-1 flex justify-center items-center bg-gray-50 dark:bg-slate-900 rounded-b-2xl">
-                <img id="viewerImageSrc" src="" class="max-w-full h-auto object-contain rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
-            </div>
-        </div>
-    </div>
-
-    <!-- Tracking Modal for Customers -->
-    <div id="trackModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
-                <h3 class="text-lg font-bold"><i class="fa-solid fa-satellite-dish mr-2"></i>Track Order</h3>
-                <button onclick="closeTrackModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="lblTrackDesc">Enter your details below to check the live status of your service requests.</p>
-                <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackName">Customer Name</label><input type="text" id="trackName" placeholder="Exact name used" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500"></div>
-                <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" id="lblTrackMob">Mobile Number</label><input type="tel" id="trackMobile" placeholder="10-digit number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 dark:text-white outline-none focus:border-indigo-500"></div>
-                <button onclick="trackOrderSubmit()" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 mt-2 rounded-xl shadow transition-transform" id="btnTrackSubmit">Search Orders</button>
-                <div id="trackResults" class="mt-4 max-h-60 overflow-y-auto custom-scrollbar"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Customer Multi-Order Modal -->
+    <!-- Customer Order Modal -->
     <div id="orderModal" class="fixed inset-0 hidden items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeModal()"></div>
         <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 dark:border-slate-700 max-h-[90vh] flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
@@ -333,21 +389,33 @@
                 </div>
 
                 <div id="standardFields" class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblName">Customer Name</label><input type="text" id="custName" placeholder="Enter full name" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"></div>
-                    <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStdMob">Mobile Number</label><input type="tel" id="custMobile" placeholder="10-digit mobile number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"></div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblName">Customer Name</label>
+                        <input type="text" id="custName" placeholder="Enter full name" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStdMob">Mobile Number</label>
+                        <input type="tel" id="custMobile" placeholder="10-digit mobile number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                    </div>
                 </div>
 
                 <div id="travelFields" class="hidden space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblNumPax">No. of Passengers</label><input type="number" id="numPassengers" min="1" max="10" value="1" onchange="renderPaxBlocks()" oninput="renderPaxBlocks()" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"></div>
-                        <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblMob">Mobile No (Contact)</label><input type="tel" id="contactMobile" placeholder="Contact number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblNumPax">No. of Passengers</label>
+                            <input type="number" id="numPassengers" min="1" max="10" value="1" onchange="renderPaxBlocks()" oninput="renderPaxBlocks()" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblMob">Mobile No (Contact)</label>
+                            <input type="tel" id="contactMobile" placeholder="Contact number" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
                     </div>
                     <div id="paxBlocksContainer" class="space-y-3"></div>
                 </div>
 
                 <div>
                     <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lblStep1">Step 1: Send details to WhatsApp</p>
-                    <a id="waLink" href="#" target="_blank" onclick="updateWaLink()" class="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-md transition-transform">
+                    <a id="waLink" href="#" target="_blank" onclick="updateWaLink()" class="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-md transition-transform hover:scale-105">
                         <i class="fa-brands fa-whatsapp text-2xl"></i> <span id="btnWa">Message +91 82508 00320</span>
                     </a>
                 </div>
@@ -359,7 +427,17 @@
 
                 <button id="submitBtn" onclick="processOrderDatabaseAndAnimation()" class="order-btn-truck shrink-0" disabled>
                     <div class="road-lines"></div><div class="box-drop"></div>
-                    <div class="truck-wrapper"><svg width="64" height="34" viewBox="0 0 64 34" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="4" width="40" height="22" rx="2" fill="#38BDF8"/><line x1="20" y1="4" x2="20" y2="26" stroke="#0284C7" stroke-width="1.5"/><path d="M40 10H54L62 18V26H40V10Z" fill="#0284C7"/><path d="M43 12H52L57 17H43V12Z" fill="#BAE6FD"/><rect x="61" y="22" width="3" height="4" fill="#64748B"/><g class="wheel" style="transform-origin: 12px 26px;"><circle cx="12" cy="26" r="5" fill="#1E293B"/><circle cx="12" cy="26" r="2" fill="#94A3B8"/></g><g class="wheel" style="transform-origin: 48px 26px;"><circle cx="48" cy="26" r="5" fill="#1E293B"/><circle cx="48" cy="26" r="2" fill="#94A3B8"/></g></svg></div>
+                    <div class="truck-wrapper">
+                        <svg width="64" height="34" viewBox="0 0 64 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="0" y="4" width="40" height="22" rx="2" fill="#38BDF8"/>
+                            <line x1="20" y1="4" x2="20" y2="26" stroke="#0284C7" stroke-width="1.5"/>
+                            <path d="M40 10H54L62 18V26H40V10Z" fill="#0284C7"/>
+                            <path d="M43 12H52L57 17H43V12Z" fill="#BAE6FD"/>
+                            <rect x="61" y="22" width="3" height="4" fill="#64748B"/>
+                            <g class="wheel" style="transform-origin: 12px 26px;"><circle cx="12" cy="26" r="5" fill="#1E293B"/><circle cx="12" cy="26" r="2" fill="#94A3B8"/></g>
+                            <g class="wheel" style="transform-origin: 48px 26px;"><circle cx="48" cy="26" r="5" fill="#1E293B"/><circle cx="48" cy="26" r="2" fill="#94A3B8"/></g>
+                        </svg>
+                    </div>
                     <span class="default-text" id="btnComplete"><i class="fa-solid fa-box-archive"></i> Complete Order</span>
                     <span class="success-text"><span>Order Placed</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
                 </button>
@@ -377,7 +455,7 @@
             <div class="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-8 bg-slate-50 dark:bg-slate-900 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700">
                 <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i> <span id="confPdf">Generating PDF receipt...</span>
             </div>
-            <button onclick="location.reload()" class="w-full bg-slate-900 dark:bg-slate-700 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-transform">Done / Place New Order</button>
+            <button onclick="location.reload()" class="w-full bg-slate-900 dark:bg-slate-700 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-transform hover:scale-105">Done / Place New Order</button>
         </div>
     </div>
 
@@ -417,6 +495,36 @@
             const otherModalsOpen = document.querySelectorAll('.fixed.flex:not(.hidden)').length > 1;
             if (!otherModalsOpen) { document.body.classList.remove('modal-open', 'overflow-hidden'); }
         }
+
+        /* --- CUSTOM ALERT SYSTEM --- */
+        function showCustomAlert(title, message, isError = false) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const iconContainer = document.getElementById('alertIconContainer');
+            const icon = document.getElementById('alertIcon');
+            if (isError) {
+                iconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-4';
+                icon.className = 'fa-solid fa-circle-xmark text-xl';
+            } else {
+                iconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4';
+                icon.className = 'fa-solid fa-circle-info text-xl';
+            }
+            showModalAnim('customAlertModal');
+        }
+
+        /* --- CUSTOM CONFIRM SYSTEM --- */
+        let confirmCallback = null;
+        function showCustomConfirm(title, message, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            confirmCallback = callback;
+            showModalAnim('customConfirmModal');
+        }
+
+        document.getElementById('btnConfirmYes').addEventListener('click', function() {
+            hideModalAnim('customConfirmModal');
+            if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+        });
 
         function switchView(view) {
             const cApp = document.getElementById('customerApp');
@@ -471,12 +579,8 @@
 
         const defaultServices = [
             { id: 'def1', en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
-            { id: 'def2', en: 'KYC for LPG (HP Gas)', bn: 'এলপিজি কেওয়াইসি (এইচপি গ্যাস)', icon: 'fa-fire-burner', isTravel: false },
-            { id: 'def3', en: 'Train Ticket', bn: 'ট্রেন টিকিট', icon: 'fa-train', isTravel: true },
-            { id: 'def4', en: 'Plane Ticket', bn: 'বিমান টিকিট', icon: 'fa-plane', isTravel: true }
         ];
 
-        // --- SMART AI ICON DICTIONARY ---
         const iconDict = {
             'id-card': ['voter', 'ration', 'epic', 'pds', 'ভোটার', 'রেশন', 'card', 'কার্ড', 'identity'],
             'train': ['train', 'railway', 'irctc', 'ট্রেন'],
@@ -515,16 +619,23 @@
             if(db) {
                 try {
                     const snapshot = await db.collection('services').get();
-                    if(snapshot.empty) {
-                        defaultServices.forEach(s => db.collection('services').add(s));
-                        services = defaultServices;
+                    if(snapshot.empty && !localStorage.getItem('cyberGigs_seeded')) {
+                        services = [];
+                        for (const s of defaultServices) {
+                            const docRef = await db.collection('services').add({ en: s.en, bn: s.bn, icon: s.icon, isTravel: s.isTravel });
+                            services.push({ id: docRef.id, en: s.en, bn: s.bn, icon: s.icon, isTravel: s.isTravel });
+                        }
+                        localStorage.setItem('cyberGigs_seeded', 'true');
+                    } else if (!snapshot.empty) {
+                        services = []; 
+                        snapshot.forEach(doc => services.push({ id: doc.id, ...doc.data() }));
+                        localStorage.setItem('cyberGigs_seeded', 'true');
                     } else {
-                        services = []; snapshot.forEach(doc => services.push({ id: doc.id, ...doc.data() }));
+                        services = [];
                     }
-                } catch (e) {
-                    services = defaultServices;
-                }
+                } catch (e) { console.error("Firestore read failed", e); services = defaultServices; }
             } else { services = defaultServices; }
+            
             document.getElementById('loadingServices').classList.add('hidden');
             document.getElementById('servicesGrid').classList.remove('hidden');
             renderServicesGrid();
@@ -663,7 +774,6 @@
 
         function updateWaLink() {
             const data = getFormData();
-            // ALWAYS Dual Language for Customer WA
             const srvNamesEn = selectedServices.map(s => s.en).join(' + ');
             const srvNamesBn = selectedServices.map(s => s.bn).join(' + ');
             
@@ -740,7 +850,7 @@
                     });
 
                     if (isDuplicate) {
-                        alert(currentLang === 'en' ? "You already have an active request for one or more of these services. Please wait for it to be completed." : "আপনার ইতিমধ্যেই এই পরিষেবাগুলির একটি বা তার বেশির জন্য একটি সক্রিয় অনুরোধ রয়েছে৷ এটি সম্পন্ন হওয়ার জন্য অনুগ্রহ করে অপেক্ষা করুন৷");
+                        showCustomAlert("Duplicate Request", currentLang === 'en' ? "You already have an active request for one or more of these services. Please wait for it to be completed." : "আপনার ইতিমধ্যেই এই পরিষেবাগুলির একটি বা তার বেশির জন্য একটি সক্রিয় অনুরোধ রয়েছে৷ এটি সম্পন্ন হওয়ার জন্য অনুগ্রহ করে অপেক্ষা করুন৷");
                         btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
                         return;
                     }
@@ -760,7 +870,7 @@
                     };
                     await db.collection('orders').add(orderData); 
                 } catch (e) { 
-                    console.error(e); alert("An error occurred. Make sure Firestore is enabled.");
+                    console.error(e); showCustomAlert("Database Error", "An error occurred. Make sure Firestore is enabled.", true);
                     btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
                     return;
                 } 
@@ -831,7 +941,7 @@
             const mobile = document.getElementById('trackMobile').value.trim();
             const resultsDiv = document.getElementById('trackResults');
             
-            if(!name || !mobile) { alert("Please enter both Name and Mobile Number."); return; }
+            if(!name || !mobile) { showCustomAlert("Missing Input", "Please enter both Name and Mobile Number."); return; }
             resultsDiv.innerHTML = '<p class="text-center text-indigo-500 py-4"><i class="fa-solid fa-spinner fa-spin text-2xl"></i></p>';
             if(!db) return;
             
@@ -894,7 +1004,6 @@
 
         function logoutAdmin() { isAdminLoggedIn = false; switchView('customer'); }
 
-        // --- SMART AI ICON ALGORITHM ---
         function detectAIIcon() {
             const text = (document.getElementById('newSrvEn').value + " " + document.getElementById('newSrvBn').value).toLowerCase();
             const preview = document.getElementById('aiIconPreview');
@@ -911,7 +1020,7 @@
         }
 
         function openAddServiceModal() {
-            if(!isAdminLoggedIn) { alert("Access Denied: Supervisor authentication required."); return; }
+            if(!isAdminLoggedIn) { showCustomAlert("Access Denied", "Supervisor authentication required.", true); return; }
             
             document.getElementById('newSrvEn').addEventListener('input', detectAIIcon);
             document.getElementById('newSrvBn').addEventListener('input', detectAIIcon);
@@ -933,7 +1042,7 @@
         }
         
         function openDeleteServiceModal() {
-            if(!isAdminLoggedIn) { alert("Access Denied"); return; }
+            if(!isAdminLoggedIn) { showCustomAlert("Access Denied", "Supervisor authentication required.", true); return; }
             populateDeleteDropdown();
             showModalAnim('deleteServiceModal');
         }
@@ -941,17 +1050,35 @@
 
         async function deleteSelectedService() {
             if(!isAdminLoggedIn || !db) return;
-            const srvId = document.getElementById('deleteSrvSelect').value;
-            if(!srvId) { alert("Please select a service to remove."); return; }
+            const selectEl = document.getElementById('deleteSrvSelect');
+            const srvId = selectEl.value;
+            if(!srvId) { showCustomAlert("Selection Required", "Please select a service to remove."); return; }
             
-            if(confirm("Are you sure you want to permanently delete this service?")) {
+            showCustomConfirm("Delete Service", "Are you sure you want to permanently delete this service?", async () => {
+                const btn = document.getElementById('btnConfirmDelete');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+                btn.disabled = true;
+
                 try {
                     await db.collection('services').doc(srvId).delete();
-                    alert("Service deleted successfully.");
+                    services = services.filter(s => s.id !== srvId);
+                    selectedServices = selectedServices.filter(s => s.id !== srvId);
+                    
+                    showCustomAlert("Success", "Service deleted successfully.");
                     closeDeleteServiceModal();
+                    
+                    renderServicesGrid();
+                    updateFloatingCart();
                     fetchServices();
-                } catch(e) { console.error(e); alert("Failed to delete."); }
-            }
+                } catch(e) { 
+                    console.error(e); 
+                    showCustomAlert("Error", "Failed to delete service.", true); 
+                } finally { 
+                    btn.innerHTML = originalText; 
+                    btn.disabled = false; 
+                }
+            });
         }
 
         function openImageViewer(docId) {
@@ -968,7 +1095,8 @@
 
         async function updateOrderStatus(docId, newStatus) {
             if(!db || !isAdminLoggedIn) return;
-            try { await db.collection('orders').doc(docId).update({ status: newStatus }); } catch(e) { console.error(e); alert("Failed to update status."); }
+            try { await db.collection('orders').doc(docId).update({ status: newStatus }); } 
+            catch(e) { console.error(e); showCustomAlert("Error", "Failed to update status.", true); }
         }
 
         /* Auto-Expire Orders Background Routine */
@@ -987,9 +1115,7 @@
             } catch(e) { console.error("Auto-cleanup error:", e); }
         }
 
-        /* ==========================================
-           NEW UNIFIED SUPERVISOR ACTION WORKFLOW
-           ========================================== */
+        /* NEW UNIFIED SUPERVISOR ACTION WORKFLOW */
         function openAdminActionModal(docId, type, mobile, refId) {
             document.getElementById('actionDocId').value = docId;
             document.getElementById('actionType').value = type;
@@ -1026,7 +1152,6 @@
             const file = document.getElementById('actionScreenshot').files[0];
             
             let msg = '';
-            // ALWAYS Dual Language for Admin Notifications
             if(status === 'Approved') {
                 msg = `*Order Approved! / আপনার অর্ডার অনুমোদিত হয়েছে!*\n\n*Ref No:* ${ref}\n`;
                 if(reason) msg += `*Remarks / মন্তব্য:* ${reason}\n`;
@@ -1039,7 +1164,6 @@
             const waBtn = document.getElementById('adminWaLink');
             waBtn.href = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`;
             
-            // Enable logic
             const confirmBtn = document.getElementById('btnConfirmAction');
             if ((status === 'Rejected' && !reason) || !file) {
                 waBtn.classList.add('pointer-events-none', 'opacity-50', 'cursor-not-allowed');
@@ -1070,7 +1194,7 @@
                     actionScreenshotBase64: base64Str
                 });
                 closeAdminActionModal();
-            } catch(e) { console.error(e); alert("Failed to save action."); }
+            } catch(e) { console.error(e); showCustomAlert("Error", "Failed to save action.", true); }
             
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 2. Confirm & Save Action';
         }
@@ -1147,7 +1271,7 @@
 
         function performAdminSearch(isRefresh = false) {
             const query = document.getElementById('adminSearchInput').value.trim().toLowerCase();
-            if (!query && !isRefresh) { alert("Please enter a customer name to search."); return; }
+            if (!query && !isRefresh) { showCustomAlert("Input Required", "Please enter a customer name to search."); return; }
             if (!query && isRefresh) return; 
 
             const results = window.globalOrdersList.filter(o => o.customerName.toLowerCase().includes(query));
@@ -1183,20 +1307,20 @@
 
         async function addNewService() {
             if(!isAdminLoggedIn) return;
-            if(!db) { alert("Please configure Firebase credentials first."); return; }
+            if(!db) { showCustomAlert("Database Error", "Please configure Firebase credentials first.", true); return; }
             
             const en = document.getElementById('newSrvEn').value.trim();
             const bn = document.getElementById('newSrvBn').value.trim();
             const icon = document.getElementById('newSrvIcon').value.trim() || 'fa-file';
             const isTravel = document.getElementById('newSrvTravel').value === "true";
 
-            if(!en || !bn) { alert("Please provide both English and Bengali names."); return; }
+            if(!en || !bn) { showCustomAlert("Missing Input", "Please provide both English and Bengali names."); return; }
             try {
                 await db.collection('services').add({ en, bn, icon, isTravel });
-                alert("Service added successfully!");
+                showCustomAlert("Success", "Service added successfully!");
                 document.getElementById('newSrvEn').value = ''; document.getElementById('newSrvBn').value = ''; document.getElementById('newSrvIcon').value = '';
                 closeAddServiceModal(); fetchServices();
-            } catch (error) { console.error(error); alert("Failed to add service."); }
+            } catch (error) { console.error(error); showCustomAlert("Error", "Failed to add service.", true); }
         }
 
         window.onload = fetchServices;
