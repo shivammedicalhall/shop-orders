@@ -61,10 +61,10 @@
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-gray-200 font-sans antialiased transition-colors duration-300 flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-gray-200 font-sans antialiased transition-colors duration-300 flex flex-col min-h-screen relative pb-24">
 
     <!-- Navbar -->
-    <nav class="bg-slate-900 dark:bg-slate-950 text-white shadow-lg sticky top-0 z-50 transition-colors">
+    <nav class="bg-slate-900 dark:bg-slate-950 text-white shadow-lg sticky top-0 z-40 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-3">
@@ -90,17 +90,28 @@
     </nav>
 
     <!-- ==================== CUSTOMER PORTAL ==================== -->
-    <div id="customerApp" class="w-full transition-all duration-300 opacity-100 translate-y-0 block">
+    <div id="customerApp" class="w-full transition-all duration-300 opacity-100 translate-y-0 block relative">
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
             <div class="text-center mb-12">
-                <h1 id="pageTitle" class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl transition-colors">Select a Service to Order</h1>
-                <p id="pageSub" class="mt-3 text-lg text-gray-500 dark:text-gray-400 transition-colors">Fast, reliable, and professional digital services.</p>
+                <h1 id="pageTitle" class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl transition-colors">Select Services to Order</h1>
+                <p id="pageSub" class="mt-3 text-lg text-gray-500 dark:text-gray-400 transition-colors">You can select multiple services. Tap to select/deselect.</p>
             </div>
             <div id="loadingServices" class="flex justify-center items-center py-10">
                 <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600"></i>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden" id="servicesGrid"></div>
         </main>
+        
+        <!-- Floating Multiple Service Cart Button -->
+        <div id="floatingCart" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-32 opacity-0 transition-all duration-500 z-30 pointer-events-none">
+            <button onclick="openCustomerModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-[0_10px_40px_rgba(16,185,129,0.5)] flex items-center gap-3 text-lg pointer-events-auto transition-transform hover:scale-105">
+                <i class="fa-solid fa-basket-shopping text-xl"></i>
+                <span id="txtProceed">Proceed with</span> 
+                <span id="cartCount" class="bg-white text-emerald-600 px-2.5 py-0.5 rounded-md font-extrabold">0</span> 
+                <span id="txtServices">Services</span>
+                <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
     </div>
 
     <!-- ==================== SUPERVISOR PORTAL ==================== -->
@@ -115,7 +126,6 @@
                     <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform">
                         <i class="fa-solid fa-folder-plus"></i> <span class="hidden sm:inline">Add Service</span>
                     </button>
-                    <!-- NEW: Delete Service Button -->
                     <button onclick="openDeleteServiceModal()" class="bg-red-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-red-700 font-bold shadow-md flex items-center gap-2 transition-transform">
                         <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Delete Service</span>
                     </button>
@@ -136,13 +146,12 @@
                         </button>
                     </div>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
                         <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 uppercase text-xs font-semibold">
                             <tr>
                                 <th class="px-4 py-3 rounded-tl-lg">Ref ID & Time</th>
-                                <th class="px-4 py-3">Service & Document</th>
+                                <th class="px-4 py-3">Services & Document</th>
                                 <th class="px-4 py-3">Customer Info</th>
                                 <th class="px-4 py-3 text-center">Status</th>
                                 <th class="px-4 py-3 rounded-tr-lg text-center">Action</th>
@@ -179,9 +188,7 @@
                 <h3 class="text-lg font-bold"><i class="fa-solid fa-user-magnifying-glass mr-2"></i>Search Results</h3>
                 <button onclick="hideModalAnim('adminSearchModal')" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 flex-1" id="adminSearchResultsBody">
-                <!-- Dynamically populated cards go here -->
-            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 flex-1" id="adminSearchResultsBody"></div>
         </div>
     </div>
 
@@ -235,7 +242,7 @@
         </div>
     </div>
 
-    <!-- NEW: Delete Service Modal -->
+    <!-- Delete Service Modal -->
     <div id="deleteServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
         <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
@@ -247,7 +254,6 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select a Service to Remove</label>
                     <select id="deleteSrvSelect" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-3 dark:text-white outline-none focus:border-red-500">
-                        <!-- Populated dynamically -->
                     </select>
                 </div>
                 <button onclick="deleteSelectedService()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
@@ -297,7 +303,7 @@
         </div>
     </div>
 
-    <!-- Customer Order Modal -->
+    <!-- Customer Multi-Order Modal -->
     <div id="orderModal" class="fixed inset-0 hidden items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeModal()"></div>
         <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 dark:border-slate-700 max-h-[90vh] flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
@@ -307,8 +313,8 @@
             </div>
             <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
                 <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 font-bold uppercase mb-1" id="lblService">Selected Service:</p>
-                    <p class="text-lg font-bold text-slate-900 dark:text-white mb-3" id="displayService">...</p>
+                    <p class="text-xs text-slate-500 font-bold uppercase mb-1" id="lblService">Selected Services:</p>
+                    <p class="text-lg font-bold text-slate-900 dark:text-white mb-3 leading-snug" id="displayService">...</p>
                     <p class="text-xs text-slate-500 font-bold uppercase mb-1" id="lblRef">Reference No:</p>
                     <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400" id="displayRef">...</p>
                 </div>
@@ -420,7 +426,12 @@
                 ct.classList.replace('translate-y-0', 'translate-y-4');
             }
             setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
-            document.body.classList.remove('modal-open', 'overflow-hidden');
+            
+            // Check if any other modals are still open before removing body classes
+            const otherModalsOpen = document.querySelectorAll('.fixed.flex:not(.hidden)').length > 1;
+            if (!otherModalsOpen) {
+                document.body.classList.remove('modal-open', 'overflow-hidden');
+            }
         }
 
         function switchView(view) {
@@ -470,21 +481,22 @@
         let services = [];
         window.orderImages = {}; 
         window.globalOrdersList = []; 
+        
+        let selectedServices = []; // Holds the user's multi-select choices
 
         const defaultServices = [
-            { en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
-            { en: 'KYC for LPG (HP Gas)', bn: 'এলপিজি কেওয়াইসি (এইচপি গ্যাস)', icon: 'fa-fire-burner', isTravel: false },
-            { en: 'Train Ticket', bn: 'ট্রেন টিকিট', icon: 'fa-train', isTravel: true },
-            { en: 'Plane Ticket', bn: 'বিমান টিকিট', icon: 'fa-plane', isTravel: true }
+            { id: 'def1', en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
+            { id: 'def2', en: 'KYC for LPG (HP Gas)', bn: 'এলপিজি কেওয়াইসি (এইচপি গ্যাস)', icon: 'fa-fire-burner', isTravel: false },
+            { id: 'def3', en: 'Train Ticket', bn: 'ট্রেন টিকিট', icon: 'fa-train', isTravel: true },
+            { id: 'def4', en: 'Plane Ticket', bn: 'বিমান টিকিট', icon: 'fa-plane', isTravel: true }
         ];
 
         let currentLang = 'en';
         let currentRefNo = '';
-        let currentServiceObj = null;
 
         const uiText = {
-            en: { title: "Select a Service to Order", sub: "Fast, reliable, and professional digital services.", modalTitle: "Place Order", lblService: "Selected Service:", lblRef: "Reference No:", lblName: "Customer Name", lblStdMob: "Mobile Number", lblStep1: "Step 1: Send details to WhatsApp", btnWa: "Message +91 82508 00320", lblStep2: "Step 2: Upload Chat Screenshot", lblFileRule: "Max 2MB. Formats: JPG, PNG, WEBP, BMP, JPEG.", btnComplete: "Complete Order", confTitle: "Order Confirmed!", confPdf: "Generating & Downloading PDF receipt...", lblNumPax: "No. of Passengers", lblMob: "Mobile No (Contact)" },
-            bn: { title: "অর্ডার করতে একটি পরিষেবা নির্বাচন করুন", sub: "দ্রুত, নির্ভরযোগ্য এবং পেশাদার ডিজিটাল পরিষেবা।", modalTitle: "অর্ডার করুন", lblService: "নির্বাচিত পরিষেবা:", lblRef: "রেফারেন্স নম্বর:", lblName: "গ্রাহকের নাম", lblStdMob: "মোবাইল নম্বর", lblStep1: "ধাপ ১: হোয়াটসঅ্যাপে বিবরণ পাঠান", btnWa: "মেসেজ করুন +91 82508 00320", lblStep2: "ধাপ ২: চ্যাটের স্ক্রিনশট আপলোড করুন", lblFileRule: "সর্বোচ্চ 2MB। ফরম্যাট: JPG, PNG, WEBP, BMP, JPEG।", btnComplete: "অর্ডার সম্পন্ন করুন", confTitle: "অর্ডার নিশ্চিত হয়েছে!", confPdf: "পিডিএফ রসিদ তৈরি এবং ডাউনলোড হচ্ছে...", lblNumPax: "যাত্রীর সংখ্যা", lblMob: "যোগাযোগ নম্বর" }
+            en: { title: "Select Services to Order", sub: "You can select multiple services. Tap to select/deselect.", modalTitle: "Place Order", lblService: "Selected Services:", lblRef: "Reference No:", lblName: "Customer Name", lblStdMob: "Mobile Number", lblStep1: "Step 1: Send details to WhatsApp", btnWa: "Message +91 82508 00320", lblStep2: "Step 2: Upload Chat Screenshot", lblFileRule: "Max 2MB. Formats: JPG, PNG, WEBP, BMP, JPEG.", btnComplete: "Complete Order", confTitle: "Order Confirmed!", confPdf: "Generating & Downloading PDF receipt...", lblNumPax: "No. of Passengers", lblMob: "Mobile No (Contact)", txtProceed: "Proceed with", txtServices: "Services" },
+            bn: { title: "অর্ডার করতে পরিষেবা নির্বাচন করুন", sub: "আপনি একাধিক পরিষেবা নির্বাচন করতে পারেন। নির্বাচন/বাতিল করতে আলতো চাপুন।", modalTitle: "অর্ডার করুন", lblService: "নির্বাচিত পরিষেবাগুলি:", lblRef: "রেফারেন্স নম্বর:", lblName: "গ্রাহকের নাম", lblStdMob: "মোবাইল নম্বর", lblStep1: "ধাপ ১: হোয়াটসঅ্যাপে বিবরণ পাঠান", btnWa: "মেসেজ করুন +91 82508 00320", lblStep2: "ধাপ ২: চ্যাটের স্ক্রিনশট আপলোড করুন", lblFileRule: "সর্বোচ্চ 2MB। ফরম্যাট: JPG, PNG, WEBP, BMP, JPEG।", btnComplete: "অর্ডার সম্পন্ন করুন", confTitle: "অর্ডার নিশ্চিত হয়েছে!", confPdf: "পিডিএফ রসিদ তৈরি এবং ডাউনলোড হচ্ছে...", lblNumPax: "যাত্রীর সংখ্যা", lblMob: "যোগাযোগ নম্বর", txtProceed: "চালিয়ে যান", txtServices: "টি পরিষেবা সহ" }
         };
 
         function toggleTheme() {
@@ -526,22 +538,57 @@
         function renderServicesGrid() {
             const grid = document.getElementById('servicesGrid'); grid.innerHTML = '';
             services.forEach(srv => {
+                const isSelected = selectedServices.some(s => s.id === srv.id);
                 const title = currentLang === 'en' ? srv.en : srv.bn;
+                
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer flex flex-col items-center text-center gap-4 group";
-                card.onclick = () => openCustomerModal(srv);
-                card.innerHTML = `<div class="h-16 w-16 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition duration-300 shadow-inner"><i class="fa-solid ${srv.icon || 'fa-file'}"></i></div><h3 class="font-bold text-gray-800 dark:text-gray-100 text-base leading-snug">${title}</h3>`;
+                card.className = `p-6 rounded-2xl shadow-sm border hover:-translate-y-1 transition duration-300 cursor-pointer flex flex-col items-center text-center gap-4 group relative ${isSelected ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500 dark:bg-slate-700 dark:border-blue-400' : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:shadow-xl'}`;
+                card.onclick = () => toggleServiceSelection(srv);
+                
+                const checkIcon = isSelected ? `<div class="absolute top-3 right-4 text-blue-600 dark:text-blue-400 text-xl"><i class="fa-solid fa-circle-check"></i></div>` : '';
+
+                card.innerHTML = `
+                    ${checkIcon}
+                    <div class="h-16 w-16 ${isSelected ? 'bg-blue-600 text-white' : 'bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white'} rounded-2xl flex items-center justify-center text-2xl transition duration-300 shadow-inner">
+                        <i class="fa-solid ${srv.icon || 'fa-file'}"></i>
+                    </div>
+                    <h3 class="font-bold ${isSelected ? 'text-blue-800 dark:text-blue-300' : 'text-gray-800 dark:text-gray-100'} text-base leading-snug">${title}</h3>
+                `;
                 grid.appendChild(card);
             });
             updateCustomerUIText();
         }
 
+        function toggleServiceSelection(srv) {
+            const idx = selectedServices.findIndex(s => s.id === srv.id);
+            if(idx > -1) selectedServices.splice(idx, 1);
+            else selectedServices.push(srv);
+            renderServicesGrid();
+            updateFloatingCart();
+        }
+
+        function updateFloatingCart() {
+            const cart = document.getElementById('floatingCart');
+            if(selectedServices.length > 0) {
+                document.getElementById('cartCount').innerText = selectedServices.length;
+                cart.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
+            } else {
+                cart.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
+            }
+        }
+
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'bn' : 'en';
             renderServicesGrid();
+            updateFloatingCart();
             if(!document.getElementById('orderModal').classList.contains('hidden')) {
                 updateCustomerUIText();
-                if(currentServiceObj && currentServiceObj.isTravel) renderPaxBlocks(true);
+                const hasTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
+                if(hasTravel) renderPaxBlocks(true);
+                
+                // Update specific text rendering
+                const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('<br> • ');
+                document.getElementById('displayService').innerHTML = '• ' + srvNames;
             }
         }
 
@@ -555,19 +602,25 @@
             document.getElementById('lblFileRule').innerText = t.lblFileRule; document.getElementById('btnComplete').innerHTML = `<i class="fa-solid fa-box-archive"></i> ${t.btnComplete}`;
             document.getElementById('lblNumPax').innerText = t.lblNumPax; document.getElementById('lblMob').innerText = t.lblMob;
             document.getElementById('btnNavTrack').innerHTML = currentLang === 'en' ? '<i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Track</span>' : '<i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">ট্র্যাক</span>';
+            document.getElementById('txtProceed').innerText = t.txtProceed; document.getElementById('txtServices').innerText = t.txtServices;
         }
 
         /* ==========================================
-           CUSTOMER ORDERING & DUPLICATE CHECK
+           CUSTOMER ORDERING (CART & MULTI-SELECT)
            ========================================== */
-        function openCustomerModal(srvObj) {
-            currentServiceObj = srvObj;
+        function openCustomerModal() {
+            if(selectedServices.length === 0) return;
+            
             const date = new Date();
             currentRefNo = `CG-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}-${Math.floor(1000+Math.random()*9000)}`;
-            document.getElementById('displayService').innerText = currentLang === 'en' ? srvObj.en : srvObj.bn;
+            
+            const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('<br> • ');
+            document.getElementById('displayService').innerHTML = '• ' + srvNames;
             document.getElementById('displayRef').innerText = currentRefNo;
             
-            if (srvObj.isTravel || srvObj.isTravel === "true") {
+            const hasTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
+            
+            if (hasTravel) {
                 document.getElementById('standardFields').classList.add('hidden'); document.getElementById('travelFields').classList.remove('hidden');
                 document.getElementById('numPassengers').value = 1; document.getElementById('contactMobile').value = '';
                 renderPaxBlocks(true);
@@ -603,7 +656,7 @@
 
         function getFormData() {
             let name = "", mobile = "";
-            let isTravel = currentServiceObj.isTravel === true || currentServiceObj.isTravel === "true";
+            let isTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
             if(isTravel) {
                 mobile = document.getElementById('contactMobile').value.trim();
                 const firstPax = document.querySelector('.pax-name');
@@ -616,8 +669,8 @@
 
         function updateWaLink() {
             const data = getFormData();
-            const srvName = currentLang === 'en' ? currentServiceObj.en : currentServiceObj.bn;
-            let msg = `Hello Cyber Gigs,\nHere are my order details:\n\n*Reference No:* ${currentRefNo}\n*Service:* ${srvName}\n`;
+            const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('\n• ');
+            let msg = `Hello Cyber Gigs,\nHere are my order details:\n\n*Reference No:* ${currentRefNo}\n*Services requested:*\n• ${srvNames}\n\n`;
             
             if (data.isTravel) {
                 const numPax = document.getElementById('numPassengers').value;
@@ -674,17 +727,24 @@
 
             if(db) { 
                 try { 
+                    // Robust Duplicate Checking for Multiple Services
                     const snapshot = await db.collection('orders').where('customerMobile', '==', formData.mobile).get();
                     let isDuplicate = false;
+                    
                     snapshot.forEach(doc => {
                         const d = doc.data();
-                        if (d.serviceNameEn === currentServiceObj.en && (d.status === 'Pending' || d.status === 'Approved')) {
-                            isDuplicate = true;
+                        if (d.status === 'Pending' || d.status === 'Approved') {
+                            const activeServices = Array.isArray(d.serviceNames) ? d.serviceNames : [d.serviceNameEn];
+                            selectedServices.forEach(sel => {
+                                if (activeServices.includes(sel.en)) {
+                                    isDuplicate = true;
+                                }
+                            });
                         }
                     });
 
                     if (isDuplicate) {
-                        alert(currentLang === 'en' ? "You already have an active request for this service. Please wait for it to be completed." : "আপনার ইতিমধ্যেই এই পরিষেবার জন্য একটি সক্রিয় অনুরোধ রয়েছে৷ এটি সম্পন্ন হওয়ার জন্য অনুগ্রহ করে অপেক্ষা করুন৷");
+                        alert(currentLang === 'en' ? "You already have an active request for one or more of these services. Please wait for it to be completed." : "আপনার ইতিমধ্যেই এই পরিষেবাগুলির একটি বা তার বেশির জন্য একটি সক্রিয় অনুরোধ রয়েছে৷ এটি সম্পন্ন হওয়ার জন্য অনুগ্রহ করে অপেক্ষা করুন৷");
                         btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
                         return;
                     }
@@ -693,9 +753,14 @@
                     const base64Str = await compressImageAsync(file);
 
                     const orderData = {
-                        refId: currentRefNo, serviceNameEn: currentServiceObj.en,
-                        customerName: formData.name, customerMobile: formData.mobile,
-                        screenshotBase64: base64Str, timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "Pending"
+                        refId: currentRefNo, 
+                        serviceNameEn: selectedServices.map(s => s.en).join(' + '),
+                        serviceNames: selectedServices.map(s => s.en), // Array structure for easier searching/checking
+                        customerName: formData.name, 
+                        customerMobile: formData.mobile,
+                        screenshotBase64: base64Str, 
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
+                        status: "Pending"
                     };
                     await db.collection('orders').add(orderData); 
                 } catch (e) { 
@@ -726,7 +791,7 @@
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
             const data = getFormData();
-            const sName = currentLang === 'en' ? currentServiceObj.en : currentServiceObj.bn;
+            const sNameStr = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join(' + ');
 
             doc.setFillColor(248, 250, 252); doc.rect(0, 0, pw, ph, 'F');
             doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(15, 23, 42); doc.text("Cyber Gigs", pw/2, 30, { align: 'center' });
@@ -736,15 +801,20 @@
             doc.setFontSize(13); doc.setTextColor(15, 23, 42);
             doc.text(`Reference No:`, 30, 95); doc.setFont("helvetica", "normal"); doc.text(`${currentRefNo}`, 75, 95);
             doc.setFont("helvetica", "bold"); doc.text(`Customer:`, 30, 110); doc.setFont("helvetica", "normal"); doc.text(`${data.name}`, 75, 110);
-            doc.setFont("helvetica", "bold"); doc.text(`Service:`, 30, 125); doc.setFont("helvetica", "normal"); doc.text(`${sName}`, 75, 125);
+            doc.setFont("helvetica", "bold"); doc.text(`Services:`, 30, 125); 
+            
+            // Multiline for long service combinations
+            doc.setFont("helvetica", "normal"); 
+            const splitSrv = doc.splitTextToSize(sNameStr, 110);
+            doc.text(splitSrv, 75, 125);
 
-            doc.setFillColor(15, 23, 42); doc.roundedRect(pw/2 - 45, 145, 90, 18, 9, 9, 'F');
-            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Order Placed", pw/2 - 20, 157);
+            doc.setFillColor(15, 23, 42); doc.roundedRect(pw/2 - 45, 155, 90, 18, 9, 9, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Order Placed", pw/2 - 20, 167);
             doc.setDrawColor(16, 185, 129); doc.setLineWidth(1.5);
-            const cX = pw/2 + 20, cY = 156; doc.line(cX-3.5, cY-3, cX, cY); doc.line(cX, cY, cX+6, cY-8);
+            const cX = pw/2 + 20, cY = 166; doc.line(cX-3.5, cY-3, cX, cY); doc.line(cX, cY, cX+6, cY-8);
             
             doc.setFont("times", "italic"); doc.setFontSize(16); doc.setTextColor(220, 38, 38); 
-            doc.text("Show it to the Owner of Shop when come to service", pw/2, 185, { align: 'center' });
+            doc.text("Show it to the Owner of Shop when come to service", pw/2, 195, { align: 'center' });
             doc.setDrawColor(203, 213, 225); doc.line(20, ph-30, pw-20, ph-30);
             doc.setFont("helvetica", "italic"); doc.setFontSize(10); doc.setTextColor(100, 116, 139);
             const currentY = new Date().getFullYear();
@@ -800,7 +870,7 @@
         }
 
         /* ==========================================
-           SUPERVISOR & ADD SERVICE PORTAL
+           SUPERVISOR & ADMIN FEATURES
            ========================================== */
         function openAdminLogin() {
             document.getElementById('adminPassword').value = ''; document.getElementById('adminError').classList.add('hidden');
@@ -965,7 +1035,7 @@
                                 </div>
                                 <p class="text-sm text-gray-600 dark:text-gray-400"><i class="fa-solid fa-phone text-xs mr-1"></i> ${d.customerMobile}</p>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 font-mono text-blue-600 dark:text-blue-400 font-bold">${d.refId}</p>
-                                <p class="text-sm text-gray-800 dark:text-gray-200 font-medium mt-2">Service: ${d.serviceNameEn}</p>
+                                <p class="text-sm text-gray-800 dark:text-gray-200 font-medium mt-2">Services: <br><span class="font-normal">${d.serviceNameEn}</span></p>
                             </div>
                             <div class="w-full md:w-48 flex flex-col justify-center">
                                 ${actionUI}
