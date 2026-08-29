@@ -111,23 +111,24 @@
                     <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">Supervisor Dashboard</h1>
                     <p class="text-gray-500 dark:text-gray-400">Manage incoming orders and update service catalog.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform">
-                        <i class="fa-solid fa-folder-plus"></i> Add Service
+                <div class="flex flex-wrap gap-2 md:gap-3">
+                    <button onclick="openAddServiceModal()" class="bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2 transition-transform">
+                        <i class="fa-solid fa-folder-plus"></i> <span class="hidden sm:inline">Add Service</span>
                     </button>
-                    <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-5 py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    <!-- NEW: Delete Service Button -->
+                    <button onclick="openDeleteServiceModal()" class="bg-red-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-red-700 font-bold shadow-md flex items-center gap-2 transition-transform">
+                        <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Delete Service</span>
+                    </button>
+                    <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
                     </button>
                 </div>
             </div>
 
             <!-- Orders Data Table & Search -->
             <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700">
-                
-                <!-- Header & Search Bar -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Recent Orders</h2>
-                    
                     <div class="flex w-full sm:w-auto gap-2">
                         <input type="text" id="adminSearchInput" placeholder="Search Customer Name..." class="w-full sm:w-64 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2 text-sm dark:text-white outline-none focus:border-blue-500 transition-colors">
                         <button onclick="performAdminSearch()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-transform">
@@ -229,6 +230,28 @@
                 </div>
                 <button onclick="addNewService()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
                     Save Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Delete Service Modal -->
+    <div id="deleteServiceModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-red-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-trash-can mr-2"></i>Delete Service</h3>
+                <button onclick="closeDeleteServiceModal()" class="text-red-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select a Service to Remove</label>
+                    <select id="deleteSrvSelect" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-3 dark:text-white outline-none focus:border-red-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <button onclick="deleteSelectedService()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Confirm Deletion
                 </button>
             </div>
         </div>
@@ -446,7 +469,7 @@
         let isAdminLoggedIn = false;
         let services = [];
         window.orderImages = {}; 
-        window.globalOrdersList = []; // Added for Local Supervisor Searching
+        window.globalOrdersList = []; 
 
         const defaultServices = [
             { en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
@@ -619,7 +642,6 @@
         document.getElementById('contactMobile').addEventListener('input', updateWaLink);
         document.getElementById('screenshot').addEventListener('change', updateWaLink);
 
-        /* Async Image Compressor */
         function compressImageAsync(file) {
             return new Promise((resolve) => {
                 if(!file) return resolve("");
@@ -800,6 +822,38 @@
         }
         function closeAddServiceModal() { hideModalAnim('addServiceModal'); }
 
+        /* Delete Service Functionality */
+        function populateDeleteDropdown() {
+            const select = document.getElementById('deleteSrvSelect');
+            select.innerHTML = '<option value="">-- Select a Service --</option>';
+            services.forEach(srv => {
+                const title = currentLang === 'en' ? srv.en : srv.bn;
+                select.innerHTML += `<option value="${srv.id}">${title}</option>`;
+            });
+        }
+        
+        function openDeleteServiceModal() {
+            if(!isAdminLoggedIn) { alert("Access Denied"); return; }
+            populateDeleteDropdown();
+            showModalAnim('deleteServiceModal');
+        }
+        function closeDeleteServiceModal() { hideModalAnim('deleteServiceModal'); }
+
+        async function deleteSelectedService() {
+            if(!isAdminLoggedIn || !db) return;
+            const srvId = document.getElementById('deleteSrvSelect').value;
+            if(!srvId) { alert("Please select a service to remove."); return; }
+            
+            if(confirm("Are you sure you want to permanently delete this service?")) {
+                try {
+                    await db.collection('services').doc(srvId).delete();
+                    alert("Service deleted successfully.");
+                    closeDeleteServiceModal();
+                    fetchServices();
+                } catch(e) { console.error(e); alert("Failed to delete."); }
+            }
+        }
+
         function openImageViewer(docId) {
             const imgData = window.orderImages[docId];
             if(imgData) {
@@ -817,7 +871,6 @@
             try { await db.collection('orders').doc(docId).update({ status: newStatus }); } catch(e) { console.error(e); alert("Failed to update status."); }
         }
 
-        /* DYNAMIC ACTION UI REUSABLE FUNCTION */
         function getActionUIParams(d, docId) {
             const waMsg = encodeURIComponent("Order Confirmed! Please come to our shop for your service!");
             const waURL = `https://wa.me/91${d.customerMobile}?text=${waMsg}`;
@@ -852,14 +905,14 @@
             
             db.collection('orders').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 tbody.innerHTML = '';
-                window.globalOrdersList = []; // Reset local cache for searching
+                window.globalOrdersList = []; 
 
                 if(snapshot.empty) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No recent orders found.</td></tr>`; return; }
                 
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     d.id = doc.id;
-                    window.globalOrdersList.push(d); // Push to cache
+                    window.globalOrdersList.push(d); 
 
                     const dateStr = d.timestamp ? d.timestamp.toDate().toLocaleString() : "Just now";
                     
@@ -883,14 +936,12 @@
                     tbody.appendChild(tr);
                 });
 
-                // Auto-refresh search modal if it's currently open
                 if (!document.getElementById('adminSearchModal').classList.contains('hidden')) {
                     performAdminSearch(true);
                 }
             });
         }
 
-        // Supervisor Search Bar Logic
         function performAdminSearch(isRefresh = false) {
             const query = document.getElementById('adminSearchInput').value.trim().toLowerCase();
             if (!query && !isRefresh) { alert("Please enter a customer name to search."); return; }
@@ -924,7 +975,6 @@
                     container.insertAdjacentHTML('beforeend', card);
                 });
             }
-            
             if (!isRefresh) showModalAnim('adminSearchModal');
         }
 
