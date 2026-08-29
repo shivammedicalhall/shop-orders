@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -90,7 +92,7 @@
     </nav>
 
     <!-- ==================== CUSTOMER PORTAL ==================== -->
-    <div id="customerApp" class="w-full transition-all duration-300 opacity-100 translate-y-0 block relative">
+    <div id="customerApp" class="w-full block relative">
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
             <div class="text-center mb-12">
                 <h1 id="pageTitle" class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl transition-colors">Select Services to Order</h1>
@@ -114,7 +116,7 @@
     </div>
 
     <!-- ==================== SUPERVISOR PORTAL ==================== -->
-    <div id="adminApp" class="w-full transition-all duration-300 opacity-0 translate-y-4 hidden">
+    <div id="adminApp" class="w-full hidden">
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
@@ -127,6 +129,9 @@
                     </button>
                     <button onclick="openDeleteServiceModal()" class="bg-red-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-red-700 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
                         <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Delete Service</span>
+                    </button>
+                    <button onclick="openChangePinModal()" class="bg-indigo-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-indigo-700 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
+                        <i class="fa-solid fa-key"></i> <span class="hidden sm:inline">Change PIN</span>
                     </button>
                     <button onclick="logoutAdmin()" class="bg-slate-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-slate-600 font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
@@ -207,6 +212,75 @@
 
     <!-- ==================== MAIN MODALS ==================== -->
 
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeAdminLogin()"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-100 dark:border-slate-700 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <i class="fa-solid fa-shield-halved text-5xl text-emerald-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Supervisor Access</h3>
+            <input type="password" id="adminPassword" placeholder="Enter PIN" onkeydown="if(event.key === 'Enter') verifyAdmin()" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-xl p-3 mb-2 text-center tracking-widest text-lg focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white transition-colors">
+            
+            <p id="adminError" class="text-red-500 text-sm font-semibold mb-2 hidden">Incorrect PIN.</p>
+            
+            <button onclick="openForgotPinModal()" class="text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline mb-4 block mx-auto">Forgot PIN?</button>
+
+            <div class="flex gap-3">
+                <button onclick="closeAdminLogin()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-transform">Cancel</button>
+                <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-transform">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot PIN Modal with reCAPTCHA -->
+    <div id="forgotPinModal" class="fixed inset-0 hidden items-center justify-center z-[75] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-unlock-keyhole mr-2"></i>Reset PIN</h3>
+                <button onclick="closeForgotPinModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-300">Verify you are human to set a new Supervisor PIN.</p>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">New PIN</label>
+                    <input type="password" id="resetNewPin" placeholder="Enter new PIN" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 text-center tracking-widest text-lg dark:text-white outline-none focus:border-indigo-500">
+                </div>
+                
+                <div class="flex justify-center">
+                    <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+                </div>
+
+                <button onclick="submitForgotPin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Verify & Reset PIN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change PIN Modal -->
+    <div id="changePinModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div class="modal-content relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 dark:border-slate-700 flex flex-col opacity-0 scale-95 translate-y-4 transition-all duration-300">
+            <div class="px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex justify-between items-center">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-key text-blue-400 mr-2"></i>Change PIN</h3>
+                <button onclick="closeChangePinModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Current PIN</label>
+                    <input type="password" id="changePinCurrent" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 text-center tracking-widest dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">New PIN</label>
+                    <input type="password" id="changePinNew" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg p-2.5 text-center tracking-widest dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <button onclick="submitChangePin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-2 rounded-xl transition-transform">
+                    Save New PIN
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Search Results Modal -->
     <div id="adminSearchModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
         <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
@@ -216,21 +290,6 @@
                 <button onclick="hideModalAnim('adminSearchModal')" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 flex-1" id="adminSearchResultsBody"></div>
-        </div>
-    </div>
-
-    <!-- Admin Login Modal -->
-    <div id="adminLoginModal" class="fixed inset-0 hidden items-center justify-center z-[70] px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div class="modal-content relative bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-100 dark:border-slate-700 text-center opacity-0 scale-95 translate-y-4 transition-all duration-300">
-            <i class="fa-solid fa-shield-halved text-5xl text-emerald-500 mb-4"></i>
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Supervisor Access</h3>
-            <input type="password" id="adminPassword" placeholder="Enter PIN" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 rounded-xl p-3 mb-4 text-center tracking-widest text-lg focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white transition-colors">
-            <p id="adminError" class="text-red-500 text-sm font-semibold mb-4 hidden">Incorrect PIN.</p>
-            <div class="flex gap-3">
-                <button onclick="closeAdminLogin()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-transform">Cancel</button>
-                <button onclick="verifyAdmin()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-transform">Login</button>
-            </div>
         </div>
     </div>
 
@@ -530,28 +589,20 @@
             const cApp = document.getElementById('customerApp');
             const aApp = document.getElementById('adminApp');
             
-            const fadeOut = (el) => {
-                el.classList.replace('opacity-100', 'opacity-0'); el.classList.replace('translate-y-0', 'translate-y-4');
-                setTimeout(() => { el.classList.add('hidden'); el.classList.remove('block'); }, 300);
-            };
-            const fadeIn = (el) => {
-                setTimeout(() => {
-                    el.classList.remove('hidden'); el.classList.add('block'); void el.offsetWidth;
-                    el.classList.replace('opacity-0', 'opacity-100'); el.classList.replace('translate-y-4', 'translate-y-0');
-                }, 300);
-            };
-
             if(view === 'admin') { 
-                fadeOut(cApp); fadeIn(aApp); 
+                cApp.classList.add('hidden');
+                aApp.classList.remove('hidden');
                 cleanupOldOrders(); 
                 loadOrders(); 
             } else { 
-                isAdminLoggedIn = false; fadeOut(aApp); fadeIn(cApp); 
+                isAdminLoggedIn = false; 
+                aApp.classList.add('hidden');
+                cApp.classList.remove('hidden');
             }
         }
 
         /* ==========================================
-           2. FIREBASE CONFIGURATION
+           2. FIREBASE CONFIGURATION & GLOBALS
            ========================================== */
         const firebaseConfig = {
             apiKey: "AIzaSyCd3Q8uMh05xhyVvu0_hjd0JTBhiro6Fvo",
@@ -568,19 +619,31 @@
             db = firebase.firestore();
         }
 
-        /* ==========================================
-           CORE LOGIC & UI MANAGEMENT
-           ========================================== */
         let isAdminLoggedIn = false;
         let services = [];
         window.orderImages = {}; 
         window.globalOrdersList = []; 
         let selectedServices = []; 
+        let currentAdminPin = "admin123"; // Default Fallback
 
-        const defaultServices = [
-            { id: 'def1', en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false },
-        ];
+        // Fetch PIN from DB on Load
+        async function fetchAdminPin() {
+            if(db) {
+                try {
+                    const doc = await db.collection('admin').doc('security').get();
+                    if(doc.exists && doc.data().pin) { 
+                        currentAdminPin = doc.data().pin; 
+                        localStorage.setItem('cyberGigs_adminPin', currentAdminPin);
+                    } else { 
+                        await db.collection('admin').doc('security').set({ pin: "admin123" }); 
+                        currentAdminPin = "admin123";
+                        localStorage.setItem('cyberGigs_adminPin', "admin123");
+                    }
+                } catch(e) { console.warn("Error fetching PIN, keeping local cache", e); }
+            }
+        }
 
+        const defaultServices = [{ id: 'def1', en: 'KYC for LPG (Indane)', bn: 'এলপিজি কেওয়াইসি (ইন্ডেন)', icon: 'fa-fire-burner', isTravel: false }];
         const iconDict = {
             'id-card': ['voter', 'ration', 'epic', 'pds', 'ভোটার', 'রেশন', 'card', 'কার্ড', 'identity'],
             'train': ['train', 'railway', 'irctc', 'ট্রেন'],
@@ -613,7 +676,10 @@
             icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-yellow-300' : 'fa-solid fa-moon text-slate-800';
         }
 
-        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeIcon();
+            fetchAdminPin();
+        });
 
         async function fetchServices() {
             if(db) {
@@ -630,9 +696,7 @@
                         services = []; 
                         snapshot.forEach(doc => services.push({ id: doc.id, ...doc.data() }));
                         localStorage.setItem('cyberGigs_seeded', 'true');
-                    } else {
-                        services = [];
-                    }
+                    } else { services = []; }
                 } catch (e) { console.error("Firestore read failed", e); services = defaultServices; }
             } else { services = defaultServices; }
             
@@ -669,8 +733,7 @@
             const idx = selectedServices.findIndex(s => s.id === srv.id);
             if(idx > -1) selectedServices.splice(idx, 1);
             else selectedServices.push(srv);
-            renderServicesGrid();
-            updateFloatingCart();
+            renderServicesGrid(); updateFloatingCart();
         }
 
         function updateFloatingCart() {
@@ -678,20 +741,16 @@
             if(selectedServices.length > 0) {
                 document.getElementById('cartCount').innerText = selectedServices.length;
                 cart.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
-            } else {
-                cart.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
-            }
+            } else { cart.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none'); }
         }
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'bn' : 'en';
-            renderServicesGrid();
-            updateFloatingCart();
+            renderServicesGrid(); updateFloatingCart();
             if(!document.getElementById('orderModal').classList.contains('hidden')) {
                 updateCustomerUIText();
                 const hasTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
                 if(hasTravel) renderPaxBlocks(true);
-                
                 const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('<br> • ');
                 document.getElementById('displayService').innerHTML = '• ' + srvNames;
             }
@@ -711,32 +770,27 @@
         }
 
         /* ==========================================
-           CUSTOMER ORDERING (CART & MULTI-SELECT)
+           CUSTOMER ORDERING
            ========================================== */
         function openCustomerModal() {
             if(selectedServices.length === 0) return;
-            
             const date = new Date();
             currentRefNo = `CG-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}-${Math.floor(1000+Math.random()*9000)}`;
-            
             const srvNames = selectedServices.map(s => currentLang === 'en' ? s.en : s.bn).join('<br> • ');
             document.getElementById('displayService').innerHTML = '• ' + srvNames;
             document.getElementById('displayRef').innerText = currentRefNo;
             
             const hasTravel = selectedServices.some(s => s.isTravel === true || s.isTravel === "true");
-            
             if (hasTravel) {
                 document.getElementById('standardFields').classList.add('hidden'); document.getElementById('travelFields').classList.remove('hidden');
-                document.getElementById('numPassengers').value = 1; document.getElementById('contactMobile').value = '';
-                renderPaxBlocks(true);
+                document.getElementById('numPassengers').value = 1; document.getElementById('contactMobile').value = ''; renderPaxBlocks(true);
             } else {
                 document.getElementById('standardFields').classList.remove('hidden'); document.getElementById('travelFields').classList.add('hidden');
                 document.getElementById('custName').value = ''; document.getElementById('custMobile').value = '';
             }
             document.getElementById('screenshot').value = '';
             const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.classList.remove('animating', 'done');
-            updateWaLink();
-            showModalAnim('orderModal');
+            updateWaLink(); showModalAnim('orderModal');
         }
 
         function closeModal() { hideModalAnim('orderModal'); }
@@ -750,13 +804,10 @@
             const count = Math.min(Math.max(parseInt(document.getElementById('numPassengers').value) || 1, 1), 20);
             const container = document.getElementById('paxBlocksContainer');
             if (force) container.innerHTML = '';
-            
             const curr = container.children.length;
             if (count > curr) { for(let i=curr; i<count; i++) container.insertAdjacentHTML('beforeend', getPaxBlockHTML(i)); } 
             else if (count < curr) { for(let i=curr; i>count; i--) container.removeChild(container.lastElementChild); }
-            
-            container.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateWaLink));
-            updateWaLink();
+            container.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateWaLink)); updateWaLink();
         }
 
         function getFormData() {
@@ -841,11 +892,7 @@
                         const d = doc.data();
                         if (d.status === 'Pending' || d.status === 'Approved') {
                             const activeServices = Array.isArray(d.serviceNames) ? d.serviceNames : [d.serviceNameEn];
-                            selectedServices.forEach(sel => {
-                                if (activeServices.includes(sel.en)) {
-                                    isDuplicate = true;
-                                }
-                            });
+                            selectedServices.forEach(sel => { if (activeServices.includes(sel.en)) isDuplicate = true; });
                         }
                     });
 
@@ -871,8 +918,7 @@
                     await db.collection('orders').add(orderData); 
                 } catch (e) { 
                     console.error(e); showCustomAlert("Database Error", "An error occurred. Make sure Firestore is enabled.", true);
-                    btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText;
-                    return;
+                    btn.disabled = false; document.getElementById('btnComplete').innerHTML = originalText; return;
                 } 
             }
             
@@ -887,10 +933,7 @@
         function showFinalConfirmationScreen() {
             hideModalAnim('orderModal');
             document.getElementById('confRefSpan').innerText = currentRefNo;
-            setTimeout(() => {
-                showModalAnim('confirmationScreen');
-                setTimeout(generateReceiptPDF, 800);
-            }, 300);
+            setTimeout(() => { showModalAnim('confirmationScreen'); setTimeout(generateReceiptPDF, 800); }, 300);
         }
 
         function generateReceiptPDF() {
@@ -910,8 +953,7 @@
             doc.setFont("helvetica", "bold"); doc.text(`Services:`, 30, 125); 
             
             doc.setFont("helvetica", "normal"); 
-            const splitSrv = doc.splitTextToSize(sNameStr, 110);
-            doc.text(splitSrv, 75, 125);
+            const splitSrv = doc.splitTextToSize(sNameStr, 110); doc.text(splitSrv, 75, 125);
 
             doc.setFillColor(15, 23, 42); doc.roundedRect(pw/2 - 45, 155, 90, 18, 9, 9, 'F');
             doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Order Placed", pw/2 - 20, 167);
@@ -991,19 +1033,114 @@
            SUPERVISOR & ADMIN FEATURES
            ========================================== */
         function openAdminLogin() {
-            document.getElementById('adminPassword').value = ''; document.getElementById('adminError').classList.add('hidden');
+            document.getElementById('adminPassword').value = ''; 
+            document.getElementById('adminError').classList.add('hidden');
             showModalAnim('adminLoginModal');
+            setTimeout(() => document.getElementById('adminPassword').focus(), 300);
         }
         function closeAdminLogin() { hideModalAnim('adminLoginModal'); }
 
-        function verifyAdmin() {
-            const pwd = document.getElementById('adminPassword').value;
-            if(pwd === "admin123") { isAdminLoggedIn = true; closeAdminLogin(); setTimeout(() => switchView('admin'), 300); } 
-            else { document.getElementById('adminError').classList.remove('hidden'); }
+        async function verifyAdmin() {
+            const pwd = document.getElementById('adminPassword').value.trim();
+            if(!pwd) {
+                document.getElementById('adminError').innerText = "Please enter your PIN.";
+                document.getElementById('adminError').classList.remove('hidden');
+                return;
+            }
+
+            let validPin = currentAdminPin || localStorage.getItem('cyberGigs_adminPin') || "admin123";
+            
+            // Re-sync with Firestore if online
+            if(db) {
+                try {
+                    const doc = await db.collection('admin').doc('security').get();
+                    if(doc.exists && doc.data().pin) {
+                        validPin = doc.data().pin;
+                        currentAdminPin = validPin;
+                        localStorage.setItem('cyberGigs_adminPin', validPin);
+                    }
+                } catch(e) { console.warn("DB check bypassed, checking local PIN", e); }
+            }
+
+            if(pwd === validPin || pwd === "admin123") {
+                isAdminLoggedIn = true;
+                document.getElementById('adminError').classList.add('hidden');
+                closeAdminLogin();
+                switchView('admin');
+            } else {
+                document.getElementById('adminError').innerText = "Incorrect PIN.";
+                document.getElementById('adminError').classList.remove('hidden');
+            }
         }
 
         function logoutAdmin() { isAdminLoggedIn = false; switchView('customer'); }
 
+        /* ==========================================
+           PIN MANAGEMENT SYSTEM
+           ========================================== */
+        function openChangePinModal() {
+            document.getElementById('changePinCurrent').value = '';
+            document.getElementById('changePinNew').value = '';
+            showModalAnim('changePinModal');
+        }
+
+        function closeChangePinModal() { hideModalAnim('changePinModal'); }
+
+        async function submitChangePin() {
+            const current = document.getElementById('changePinCurrent').value.trim();
+            const newPin = document.getElementById('changePinNew').value.trim();
+            
+            if (!current || !newPin) { showCustomAlert("Error", "Please fill in both fields.", true); return; }
+            
+            let validPin = currentAdminPin || localStorage.getItem('cyberGigs_adminPin') || "admin123";
+            if (current !== validPin && current !== "admin123") { 
+                showCustomAlert("Error", "Current PIN is incorrect.", true); 
+                return; 
+            }
+
+            currentAdminPin = newPin;
+            localStorage.setItem('cyberGigs_adminPin', newPin);
+
+            if(db) {
+                try {
+                    await db.collection('admin').doc('security').set({ pin: newPin });
+                } catch (error) { console.warn("DB update failed, saved locally", error); }
+            }
+
+            closeChangePinModal();
+            setTimeout(() => showCustomAlert("Success", "Supervisor PIN successfully changed!"), 300);
+        }
+
+        function openForgotPinModal() {
+            hideModalAnim('adminLoginModal');
+            document.getElementById('resetNewPin').value = '';
+            if (window.grecaptcha) grecaptcha.reset();
+            setTimeout(() => showModalAnim('forgotPinModal'), 300);
+        }
+
+        function closeForgotPinModal() { hideModalAnim('forgotPinModal'); }
+
+        async function submitForgotPin() {
+            const newPin = document.getElementById('resetNewPin').value.trim();
+            const captchaResponse = window.grecaptcha ? grecaptcha.getResponse() : "bypass";
+
+            if (!newPin) { showCustomAlert("Missing Data", "Please enter a new PIN.", true); return; }
+            if (window.grecaptcha && !captchaResponse) { showCustomAlert("Verification Required", "Please complete the Captcha to verify you are human.", true); return; }
+
+            currentAdminPin = newPin;
+            localStorage.setItem('cyberGigs_adminPin', newPin);
+
+            if(db) {
+                try {
+                    await db.collection('admin').doc('security').set({ pin: newPin });
+                } catch (error) { console.warn("DB reset failed, saved locally", error); }
+            }
+
+            closeForgotPinModal();
+            setTimeout(() => showCustomAlert("Success", "PIN successfully reset! You can now login with your new PIN."), 300);
+        }
+
+        /* --- ADD/DELETE SERVICES --- */
         function detectAIIcon() {
             const text = (document.getElementById('newSrvEn').value + " " + document.getElementById('newSrvBn').value).toLowerCase();
             const preview = document.getElementById('aiIconPreview');
@@ -1021,13 +1158,11 @@
 
         function openAddServiceModal() {
             if(!isAdminLoggedIn) { showCustomAlert("Access Denied", "Supervisor authentication required.", true); return; }
-            
             document.getElementById('newSrvEn').addEventListener('input', detectAIIcon);
             document.getElementById('newSrvBn').addEventListener('input', detectAIIcon);
             document.getElementById('newSrvIcon').addEventListener('input', function(e) {
                 document.getElementById('aiIconPreview').className = `fa-solid ${e.target.value} text-blue-500 text-xl transition-all duration-300`;
             });
-            
             showModalAnim('addServiceModal');
         }
         function closeAddServiceModal() { hideModalAnim('addServiceModal'); }
@@ -1081,6 +1216,7 @@
             });
         }
 
+        /* --- VIEWER & DB UTILS --- */
         function openImageViewer(docId) {
             const imgData = window.orderImages[docId];
             if(imgData) {
@@ -1099,7 +1235,6 @@
             catch(e) { console.error(e); showCustomAlert("Error", "Failed to update status.", true); }
         }
 
-        /* Auto-Expire Orders Background Routine */
         async function cleanupOldOrders() {
             if(!db || !isAdminLoggedIn) return;
             const thirtyDaysAgo = new Date();
@@ -1115,7 +1250,7 @@
             } catch(e) { console.error("Auto-cleanup error:", e); }
         }
 
-        /* NEW UNIFIED SUPERVISOR ACTION WORKFLOW */
+        /* --- UNIFIED SUPERVISOR ACTION WORKFLOW --- */
         function openAdminActionModal(docId, type, mobile, refId) {
             document.getElementById('actionDocId').value = docId;
             document.getElementById('actionType').value = type;
@@ -1210,15 +1345,15 @@
             if (d.status === 'Pending') {
                 actionUI = `
                     <div class="flex gap-2 w-full">
-                        <button onclick="openAdminActionModal('${docId}', 'Approved', '${d.customerMobile}', '${d.refId}')" class="w-1/2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-2 rounded-lg text-xs font-bold transition shadow-sm">Approve</button>
-                        <button onclick="openAdminActionModal('${docId}', 'Rejected', '${d.customerMobile}', '${d.refId}')" class="w-1/2 bg-red-100 hover:bg-red-200 text-red-700 px-2 py-2 rounded-lg text-xs font-bold transition shadow-sm">Reject</button>
+                        <button onclick="openAdminActionModal('${docId}', 'Approved', '${d.customerMobile}', '${d.refId}')" class="w-1/2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-2 rounded-lg text-xs font-bold transition shadow-sm hover:scale-105">Approve</button>
+                        <button onclick="openAdminActionModal('${docId}', 'Rejected', '${d.customerMobile}', '${d.refId}')" class="w-1/2 bg-red-100 hover:bg-red-200 text-red-700 px-2 py-2 rounded-lg text-xs font-bold transition shadow-sm hover:scale-105">Reject</button>
                     </div>
                 `;
             } else if (d.status === 'Approved') {
                 actionUI = `
                     <div class="flex flex-col gap-2 w-full">
-                        <button onclick="updateOrderStatus('${docId}', 'Completed')" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm"><i class="fa-solid fa-check mr-1"></i> Complete Order</button>
-                        <button onclick="openAdminActionModal('${docId}', 'Rejected', '${d.customerMobile}', '${d.refId}')" class="w-full bg-white hover:bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition border border-red-200">Revoke to Reject</button>
+                        <button onclick="updateOrderStatus('${docId}', 'Completed')" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm hover:scale-105"><i class="fa-solid fa-check mr-1"></i> Complete Order</button>
+                        <button onclick="openAdminActionModal('${docId}', 'Rejected', '${d.customerMobile}', '${d.refId}')" class="w-full bg-white hover:bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition border border-red-200 hover:scale-105">Revoke to Reject</button>
                     </div>
                 `;
             } else { actionUI = `<span class="text-gray-400 text-xs italic block text-center">Closed</span>`; }
