@@ -430,7 +430,7 @@
             const ov = m.querySelector('.modal-overlay');
             const ct = m.querySelector('.modal-content');
             m.classList.remove('hidden'); m.classList.add('flex');
-            void m.offsetWidth; 
+            void m.offsetWidth; // Force Reflow
             if(ov) ov.classList.replace('opacity-0', 'opacity-100');
             if(ct) {
                 ct.classList.replace('opacity-0', 'opacity-100');
@@ -516,21 +516,12 @@
 
         // --- SMART AI ICON DICTIONARY ---
         const iconDict = {
-            'fire-burner': ['lpg', 'gas', 'cylinder', 'fuel', 'indane', 'hp'],
-            'passport': ['passport', 'visa', 'travel', 'পাসপোর্ট'],
-            'address-card': ['aadhaar', 'aadhar', 'address', 'uidai', 'আধার'],
-            'file-invoice': ['ration', 'pds', 'food', 'রেশন'],
-            'id-card': ['voter', 'epic', 'election', 'ভোটার'],
+            'id-card': ['voter', 'ration', 'epic', 'pds', 'ভোটার', 'রেশন', 'card', 'কার্ড', 'identity'],
             'train': ['train', 'railway', 'irctc', 'ট্রেন'],
-            'plane': ['plane', 'flight', 'air', 'বিমান'],
-            'notes-medical': ['ayushman', 'health', 'medical', 'hospital', 'doctor', 'আয়ুষ্মান'],
-            'download': ['download', 'save', 'get', 'ডাউনলোড'],
-            'print': ['xerox', 'print', 'photocopy', 'জেরক্স'],
-            'copy': ['copy', 'duplicate', 'ফটোকপি'],
-            'graduation-cap': ['school', 'college', 'student', 'education', 'admission', 'ছাত্র'],
-            'file-invoice-dollar': ['tax', 'pan', 'income', 'প্যান'],
-            'bolt': ['electricity', 'power', 'বিদ্যুৎ'],
-            'building-columns': ['bank', 'account', 'finance', 'ব্যাংক']
+            'plane': ['plane', 'flight', 'air', 'বিমান', 'aeroplane'],
+            'fire-burner': ['lpg', 'gas', 'cylinder', 'indane', 'hp', 'গ্যাস'],
+            'hospital': ['health', 'medical', 'hospital', 'ayushman', 'স্বাস্থ্য', 'আয়ুষ্মান'],
+            'print': ['xerox', 'print', 'photocopy', 'জেরক্স', 'copy', 'ফটোকপি']
         };
 
         let currentLang = 'en';
@@ -954,7 +945,6 @@
         function openAddServiceModal() {
             if(!isAdminLoggedIn) { alert("Access Denied: Supervisor authentication required."); return; }
             
-            // Attach AI listeners
             document.getElementById('newSrvEn').addEventListener('input', detectAIIcon);
             document.getElementById('newSrvBn').addEventListener('input', detectAIIcon);
             document.getElementById('newSrvIcon').addEventListener('input', function(e) {
